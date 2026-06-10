@@ -1,0 +1,9 @@
+title = "TaskVault demo — allowlist fake placeholders only"
+
+[allowlist]
+description = "Known demo-only fake credentials; real secrets must still fail"
+regexTarget = "match"
+regexes = [
+  '''AKIAFAKEDEMO123456''',
+  '''sk_test_fake_demo_value''',
+]

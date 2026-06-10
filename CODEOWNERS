@@ -1,0 +1,8 @@
+# Default owners for all paths
+* @taskvault-demo/maintainers
+
+# Intentional risk manifests and docs require maintainer review
+/k8s/ @taskvault-demo/maintainers
+/docs/intentional-risks.md @taskvault-demo/maintainers
+/.github/workflows/ @taskvault-demo/maintainers
+/infra/cdk/ @taskvault-demo/maintainers

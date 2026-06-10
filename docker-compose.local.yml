@@ -1,0 +1,81 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: taskvault-postgres
+    environment:
+      POSTGRES_USER: demo
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: taskvault
+    ports:
+      - "5432:5432"
+    volumes:
+      - taskvault-postgres-data:/var/lib/postgresql/data
+    networks:
+      - taskvault-local
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U demo -d taskvault"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  localstack:
+    image: localstack/localstack:latest
+    container_name: taskvault-localstack
+    environment:
+      SERVICES: s3,sqs,secretsmanager
+      AWS_DEFAULT_REGION: us-east-1
+      DEBUG: 0
+    ports:
+      - "4566:4566"
+    networks:
+      - taskvault-local
+
+  # App services — uncomment in M5 when Dockerfiles and source exist.
+  #
+  # backend:
+  #   build:
+  #     context: ./backend
+  #   container_name: taskvault-backend
+  #   env_file: .env
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #     localstack:
+  #       condition: service_started
+  #   ports:
+  #     - "8080:8080"
+  #   networks:
+  #     - taskvault-local
+  #
+  # worker:
+  #   build:
+  #     context: ./worker
+  #   container_name: taskvault-worker
+  #   env_file: .env
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #     localstack:
+  #       condition: service_started
+  #   networks:
+  #     - taskvault-local
+  #
+  # frontend:
+  #   build:
+  #     context: ./frontend
+  #   container_name: taskvault-frontend
+  #   depends_on:
+  #     - backend
+  #   ports:
+  #     - "3000:80"
+  #   networks:
+  #     - taskvault-local
+
+networks:
+  taskvault-local:
+    name: taskvault-local
+
+volumes:
+  taskvault-postgres-data:
+    name: taskvault-postgres-data

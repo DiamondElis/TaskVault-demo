@@ -1,0 +1,26 @@
+# Node
+node_modules/
+dist/
+.env
+!.env.example
+
+# CDK
+cdk.out/
+infra/cdk/**/*.js
+infra/cdk/**/*.d.ts
+!infra/cdk/jest.config.js
+
+# OS junk
+.DS_Store
+Thumbs.db
+*.swp
+*~
+
+# Editor / IDE
+.idea/
+.vscode/
+*.log
+
+# Test / coverage
+coverage/
+.nyc_output/
