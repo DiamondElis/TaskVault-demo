@@ -1,5 +1,5 @@
 import express from 'express';
-import { attachUserMiddleware, requireAuth } from './middleware/auth.js';
+import { attachUserMiddleware } from './middleware/auth.js';
 import { metricsMiddleware } from './middleware/metrics.js';
 import { requestIdMiddleware } from './middleware/request-id.js';
 import adminRouter from './routes/admin.js';
@@ -26,10 +26,6 @@ export function createApp(): express.Application {
   app.use('/api/tasks', tasksRouter);
   app.use('/api/files', filesRouter);
   app.use('/api/admin', adminRouter);
-
-  app.get('/api', requireAuth, (_req, res) => {
-    res.status(200).json({ service: 'backend-api', status: 'placeholder' });
-  });
 
   return app;
 }

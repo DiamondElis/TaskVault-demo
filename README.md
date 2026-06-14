@@ -16,28 +16,86 @@ Deliberately vulnerable cloud-native demo app (AWS + EKS + GitHub) for CNAPP eva
 
 ```
 taskvault-demo/
-  frontend/           UI (stub until app milestone)
-  backend/            API, migrations/, src/db/
-  worker/             SQS consumer (stub)
-  infra/cdk/          AWS CDK (stub)
-  k8s/                EKS manifests (stub)
-  scripts/            seed-demo-data.ts, export-evidence.sh, validate-demo.sh
-  docs/               architecture, threat-model, runbook, … (stubs until M14)
-  artifacts/sample/   scanner outputs + expected-*.json (M13)
+  frontend/           Vite + React UI (nginx in production)
+  backend/            Express API, migrations/, src/db/
+  worker/             SQS consumer + internal HTTP
+  infra/cdk/          AWS CDK stacks (network, storage, EKS, IAM, observability)
+  k8s/                base/ + overlays/local|eks (Kustomize)
+  scripts/            kind-up, k8s-local-up, smoke-local.sh, seed-demo-data.ts, …
+  docs/               architecture, intentional-risks, kind-local, test-plan, …
+  artifacts/sample/   kubescape + k8s validation evidence (M7); expected-*.json (M13)
 ```
 
 ## Local run
 
 1. `cp .env.example .env`
 2. `make local-up` — Postgres 16 + LocalStack (S3, SQS, Secrets Manager)
-3. `make seed-demo` — idempotent DB migrations via `backend/src/db/migrate-and-seed.ts`
+3. `make seed-demo` — idempotent migrations + demo seed (users, tasks, files, jobs, sensitive S3 fixtures). Use `SEED_TARGET=eks` after `make k8s-deploy`.
 4. `cd backend && npm install && npm run dev` — API on `:8080` (`/api/healthz`, `/api/auth/*`, `/api/tasks`, `/api/files`, …)
+5. `cd worker && npm install && npm run dev` — worker on `:8081` (SQS consumer + `/worker/healthz`, `/internal/jobs/*`)
+6. `cd frontend && npm install && npm run dev` — UI on `:3000` (proxies `/api` → backend, `/internal` → worker)
+
+Demo admin (after `make seed-demo`): `admin@taskvault.demo` / `password123`
 
 Schema tables: `users`, `tasks`, `files`, `jobs`, `reports`, `audit_events`. Route map: `backend/ROUTES.md`. Manual migrations: `cd backend && npm run migrate:up` / `migrate:down`.
 
+## Local Kubernetes (kind)
+
+Validate manifests without EKS:
+
+```bash
+make kind-up              # kind + ingress-nginx + Postgres/LocalStack on kind network
+make k8s-local-up         # load images, apply overlays/local, run db-migrator
+make k8s-local-validate   # workloads + vuln-3/5/7 evidence → artifacts/sample/
+make k8s-kubescape        # NSA framework scan → artifacts/sample/
+```
+
+See `docs/kind-local.md` for local vs EKS differences (ingress-nginx vs ALB, dummy IRSA, LocalStack wiring).
+
 ## Deploy to AWS
 
-<!-- TODO: Account setup, make cdk-deploy, make k8s-deploy, validation steps. -->
+```bash
+# Synthesize templates + Checkov scan (no AWS credentials required for synth)
+make cdk-synth
+
+# Deploy all stacks to taskvault-demo-prod (us-east-1)
+export CDK_DEFAULT_ACCOUNT=<account-id>
+export CDK_DEFAULT_REGION=us-east-1
+make cdk-deploy
+```
+
+Set `githubOrg` in `infra/cdk/cdk.json` context (or `-c githubOrg=your-org`) before deploying the GitHub OIDC stack.
+
+### EKS workloads
+
+```bash
+make cdk-deploy-foundation && make cdk-deploy-eks && make eks-verify
+make cdk-deploy-iam && make ecr-push-bootstrap && make k8s-deploy
+make eks-verify-alb && make eks-verify-logs
+make eks-deploy-seed-verify   # M10: migrator, seed, e2e, evidence (T157–T164)
+```
+
+See `docs/eks-deploy.md` for the full M9/M10 flow (T146–T164).
+
+### Vulnerability verification (M11)
+
+After EKS is live and seeded:
+
+```bash
+make verify-vuln-matrix    # T165–T174 per-vuln evidence → artifacts/sample/
+make compile-vuln-matrix   # T175: assemble §7 matrix + update docs/intentional-risks.md
+```
+
+Or a single vuln: `RUN_VULN=3 make verify-vuln-matrix`
+
+### CI/CD (M12)
+
+GitHub Actions: `build.yml` (sane baseline), `security-scan.yml` (no gate), `deploy.yml` (vuln-10). See `docs/ci-cd.md`.
+
+```bash
+# After push to main (requires AWS_OIDC_ROLE_ARN repo variable):
+make ci-verify-pipeline
+```
 
 ## Cleanup
 
@@ -543,7 +601,7 @@ The teaching point baked in: a lone CVE (8) or a lone `s3:*` (2) is *medium*; it
 These let the CNAPP be validated even when the live AWS environment is destroyed, and they double as the *acceptance oracle* — the CNAPP's output should match `expected-attack-paths.json`.
 
 ### Make targets
-`local-up`, `local-down`, `docker-build`, `scan-local`, `cdk-synth`, `cdk-deploy`, `k8s-deploy`, `seed-demo`, `test-demo`, `export-evidence`, `destroy`.
+`local-up`, `local-down`, `docker-build`, `scan-local`, `verify-vuln-matrix`, `compile-vuln-matrix`, `cdk-synth`, `cdk-deploy`, `k8s-deploy`, `k8s-lint`, `kind-up`, `kind-down`, `kind-load-images`, `k8s-local-up`, `k8s-local-validate`, `k8s-kubescape`, `seed-demo`, `test-demo`, `export-evidence`, `destroy`.
 
 ### `scripts/validate-demo.sh` checks
 namespace exists → workloads up → `backend-sa` has the IRSA role-arn annotation → `kubectl auth can-i list secrets --as=system:serviceaccount:demo-prod:backend-sa` returns **yes** (proves VULN 3) → ingress/ALB present → `aws s3api get-bucket-versioning` shows disabled (proves VULN 9) → `/api/healthz` 200 → scanner + expected-path artifacts exist.

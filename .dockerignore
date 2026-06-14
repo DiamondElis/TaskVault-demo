@@ -1,0 +1,17 @@
+**/node_modules
+**/dist
+**/coverage
+**/.env
+**/.env.*
+**/*.log
+.git
+.gitignore
+**/*.test.ts
+**/*.test.tsx
+**/vitest.config.ts
+infra
+k8s
+docs
+artifacts
+scripts
+!scripts/localstack-init

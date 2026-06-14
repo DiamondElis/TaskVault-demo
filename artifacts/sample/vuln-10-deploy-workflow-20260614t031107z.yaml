@@ -1,0 +1,24 @@
+# vuln-10: intentionally weak deploy workflow — over-broad permissions + unpinned third-party action.
+name: Deploy to EKS
+
+on:
+  workflow_dispatch:
+
+permissions: write-all
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # vuln-10: unpinned @main third-party action (supply-chain risk).
+      - uses: taskvault-demo/some-deploy-action@main
+
+      - name: Assume AWS + deploy to EKS
+        env:
+          AWS_REGION: us-east-1
+          EKS_CLUSTER_NAME: taskvault-eks
+        run: |
+          echo "Deploy stub — uses taskvault-github-deploy-role via OIDC in real runs (vuln-10)."
+          echo "Role: taskvault-github-deploy-role"

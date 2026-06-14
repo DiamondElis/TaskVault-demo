@@ -1,0 +1,6 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: report-job
+  namespace: demo-prod
+$patch: delete

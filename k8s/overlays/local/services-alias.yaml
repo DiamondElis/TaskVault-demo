@@ -1,0 +1,42 @@
+# Compose-oriented nginx upstream names (backend/worker) for kind validation.
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend
+  namespace: demo-prod
+  labels:
+    app.kubernetes.io/name: taskvault
+    app.kubernetes.io/component: backend-api
+    app.kubernetes.io/part-of: taskvault-demo
+    cnapp.demo/local-alias: "true"
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: taskvault
+    app.kubernetes.io/component: backend-api
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+      protocol: TCP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: worker
+  namespace: demo-prod
+  labels:
+    app.kubernetes.io/name: taskvault
+    app.kubernetes.io/component: worker
+    app.kubernetes.io/part-of: taskvault-demo
+    cnapp.demo/local-alias: "true"
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: taskvault
+    app.kubernetes.io/component: worker
+  ports:
+    - name: http
+      port: 8081
+      targetPort: http
+      protocol: TCP

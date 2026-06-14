@@ -1,0 +1,23 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../base
+
+patches:
+  - path: serviceaccount-irsa-patch.yaml
+  - path: config-patch.yaml
+  - path: deployments-patch.yaml
+  - path: jobs-patch.yaml
+  - path: cronjob-patch.yaml
+
+images:
+  - name: taskvault-frontend
+    newName: __TASKVAULT_ECR_REGISTRY__/taskvault-frontend
+    newTag: __TASKVAULT_IMAGE_TAG__
+  - name: taskvault-backend
+    newName: __TASKVAULT_ECR_REGISTRY__/taskvault-backend
+    newTag: __TASKVAULT_IMAGE_TAG__
+  - name: taskvault-worker
+    newName: __TASKVAULT_ECR_REGISTRY__/taskvault-worker
+    newTag: __TASKVAULT_IMAGE_TAG__

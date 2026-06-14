@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-api
+  namespace: demo-prod
+spec:
+  template:
+    spec:
+      containers:
+        - name: backend-api
+          env:
+            - name: USE_SECRETS_MANAGER
+              value: "true"
+          imagePullPolicy: Always
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: worker
+  namespace: demo-prod
+spec:
+  template:
+    spec:
+      containers:
+        - name: worker
+          env:
+            - name: USE_SECRETS_MANAGER
+              value: "true"
+          imagePullPolicy: Always
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  namespace: demo-prod
+spec:
+  template:
+    spec:
+      containers:
+        - name: frontend
+          imagePullPolicy: Always

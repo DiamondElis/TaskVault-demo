@@ -1,13 +1,9 @@
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { runner } from 'node-pg-migrate';
 import './load-env.js';
 import { getDatabaseUrl } from './index.js';
 
-const migrationsDir = path.join(
-  path.dirname(fileURLToPath(import.meta.url)),
-  '../../migrations',
-);
+const migrationsDir = path.join(process.cwd(), 'migrations');
 
 export async function runMigrations(direction: 'up' | 'down'): Promise<void> {
   await runner({

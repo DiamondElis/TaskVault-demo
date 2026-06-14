@@ -1,0 +1,237 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: "2026-06-10T12:24:07Z"
+  deletionGracePeriodSeconds: 30
+  deletionTimestamp: "2026-06-10T12:36:59Z"
+  generateName: worker-55bb49bbf5-
+  generation: 2
+  labels:
+    app.kubernetes.io/component: worker
+    app.kubernetes.io/managed-by: github-actions
+    app.kubernetes.io/name: taskvault
+    app.kubernetes.io/part-of: taskvault-demo
+    cnapp.demo/environment: demo-prod
+    cnapp.demo/intentional-risk: "true"
+    cnapp.demo/risk-id: vuln-5
+    pod-template-hash: 55bb49bbf5
+  name: worker-55bb49bbf5-fbv55
+  namespace: demo-prod
+  ownerReferences:
+  - apiVersion: apps/v1
+    blockOwnerDeletion: true
+    controller: true
+    kind: ReplicaSet
+    name: worker-55bb49bbf5
+    uid: b0f721bf-a864-463b-9be3-1acb5b8b1e65
+  resourceVersion: "3423"
+  uid: aadbddc0-dbf6-4395-8e5d-7e0b02c78ee8
+spec:
+  containers:
+  - env:
+    - name: USE_SECRETS_MANAGER
+      value: "false"
+    - name: DATABASE_URL
+      valueFrom:
+        secretKeyRef:
+          key: DATABASE_URL
+          name: db-credentials
+    envFrom:
+    - configMapRef:
+        name: app-config
+    - configMapRef:
+        name: worker-config
+    image: taskvault-worker:local
+    imagePullPolicy: Never
+    livenessProbe:
+      failureThreshold: 3
+      httpGet:
+        path: /worker/healthz
+        port: http
+        scheme: HTTP
+      initialDelaySeconds: 15
+      periodSeconds: 10
+      successThreshold: 1
+      timeoutSeconds: 1
+    name: worker
+    ports:
+    - containerPort: 8081
+      name: http
+      protocol: TCP
+    readinessProbe:
+      failureThreshold: 3
+      httpGet:
+        path: /worker/readyz
+        port: http
+        scheme: HTTP
+      initialDelaySeconds: 10
+      periodSeconds: 5
+      successThreshold: 1
+      timeoutSeconds: 1
+    resources:
+      limits:
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 100m
+        memory: 128Mi
+    securityContext:
+      privileged: true
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    volumeMounts:
+    - mountPath: /etc/taskvault/worker
+      name: worker-config-volume
+      readOnly: true
+    - mountPath: /tmp
+      name: tmp
+    - mountPath: /host
+      name: host-root
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: kube-api-access-wknv8
+      readOnly: true
+  dnsPolicy: ClusterFirst
+  enableServiceLinks: true
+  hostAliases:
+  - hostnames:
+    - host.docker.internal
+    ip: 172.18.0.1
+  nodeName: taskvault-control-plane
+  preemptionPolicy: PreemptLowerPriority
+  priority: 0
+  restartPolicy: Always
+  schedulerName: default-scheduler
+  securityContext: {}
+  serviceAccount: worker-sa
+  serviceAccountName: worker-sa
+  terminationGracePeriodSeconds: 30
+  tolerations:
+  - effect: NoExecute
+    key: node.kubernetes.io/not-ready
+    operator: Exists
+    tolerationSeconds: 300
+  - effect: NoExecute
+    key: node.kubernetes.io/unreachable
+    operator: Exists
+    tolerationSeconds: 300
+  volumes:
+  - configMap:
+      defaultMode: 420
+      name: worker-config
+    name: worker-config-volume
+  - emptyDir: {}
+    name: tmp
+  - hostPath:
+      path: /
+      type: Directory
+    name: host-root
+  - name: kube-api-access-wknv8
+    projected:
+      defaultMode: 420
+      sources:
+      - serviceAccountToken:
+          expirationSeconds: 3607
+          path: token
+      - configMap:
+          items:
+          - key: ca.crt
+            path: ca.crt
+          name: kube-root-ca.crt
+      - downwardAPI:
+          items:
+          - fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.namespace
+            path: namespace
+status:
+  allocatedResources:
+    cpu: 100m
+    memory: 128Mi
+  conditions:
+  - lastProbeTime: null
+    lastTransitionTime: "2026-06-10T12:24:07Z"
+    observedGeneration: 2
+    status: "True"
+    type: PodReadyToStartContainers
+  - lastProbeTime: null
+    lastTransitionTime: "2026-06-10T12:24:07Z"
+    observedGeneration: 2
+    status: "True"
+    type: Initialized
+  - lastProbeTime: null
+    lastTransitionTime: "2026-06-10T12:24:07Z"
+    message: 'containers with unready status: [worker]'
+    observedGeneration: 2
+    reason: ContainersNotReady
+    status: "False"
+    type: Ready
+  - lastProbeTime: null
+    lastTransitionTime: "2026-06-10T12:24:07Z"
+    message: 'containers with unready status: [worker]'
+    observedGeneration: 2
+    reason: ContainersNotReady
+    status: "False"
+    type: ContainersReady
+  - lastProbeTime: null
+    lastTransitionTime: "2026-06-10T12:24:07Z"
+    observedGeneration: 2
+    status: "True"
+    type: PodScheduled
+  containerStatuses:
+  - allocatedResources:
+      cpu: 100m
+      memory: 128Mi
+    containerID: containerd://5e8cdaf333f7be8206645844047396ca57c03f89708db15e2995c06635bdb2ed
+    image: docker.io/library/taskvault-worker:local
+    imageID: docker.io/library/import-2026-06-10@sha256:b8f5937f1dd818812f2ca33178e28cf610a8ddc410b5b764105c75b54d64619d
+    lastState: {}
+    name: worker
+    ready: false
+    resources:
+      limits:
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 100m
+        memory: 128Mi
+    restartCount: 0
+    started: true
+    state:
+      running:
+        startedAt: "2026-06-10T12:24:08Z"
+    user:
+      linux:
+        gid: 1001
+        supplementalGroups:
+        - 1001
+        uid: 1001
+    volumeMounts:
+    - mountPath: /etc/taskvault/worker
+      name: worker-config-volume
+      readOnly: true
+      recursiveReadOnly: Disabled
+    - mountPath: /tmp
+      name: tmp
+    - mountPath: /host
+      name: host-root
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: kube-api-access-wknv8
+      readOnly: true
+      recursiveReadOnly: Disabled
+  hostIP: 172.18.0.8
+  hostIPs:
+  - ip: 172.18.0.8
+  observedGeneration: 2
+  phase: Running
+  podIP: 10.244.0.17
+  podIPs:
+  - ip: 10.244.0.17
+  qosClass: Burstable
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 79m
+      memory: 128Mi
+  startTime: "2026-06-10T12:24:07Z"

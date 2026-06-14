@@ -1,0 +1,13 @@
+node_modules
+dist
+coverage
+.env
+.env.*
+*.log
+.git
+.gitignore
+**/*.test.ts
+**/*.test.tsx
+src/**/*.test.ts
+src/**/*.test.tsx
+tests

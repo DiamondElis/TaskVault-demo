@@ -1,0 +1,64 @@
+
+=== T114 — Workloads, services, EndpointSlices ===
+NAME                          READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/backend-api   1/1     1            1           38m
+deployment.apps/frontend      1/1     1            1           38m
+deployment.apps/worker        1/1     1            1           38m
+
+NAME                               READY   STATUS      RESTARTS   AGE
+pod/backend-api-7f44778dd9-bp9ch   1/1     Running     0          31m
+pod/db-migrator-tnzdr              0/1     Completed   0          17m
+pod/frontend-5d969f574b-cst65      1/1     Running     0          31m
+pod/worker-74f8966d9-2q8th         1/1     Running     0          26m
+
+NAME                              TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)    AGE
+service/backend                   ClusterIP   10.96.93.214    <none>        8080/TCP   31m
+service/backend-service           ClusterIP   10.96.203.192   <none>        8080/TCP   46m
+service/frontend-service          ClusterIP   10.96.193.21    <none>        80/TCP     46m
+service/metrics-service           ClusterIP   10.96.104.234   <none>        8080/TCP   46m
+service/worker                    ClusterIP   10.96.151.95    <none>        8081/TCP   31m
+service/worker-internal-service   ClusterIP   10.96.93.227    <none>        8081/TCP   46m
+
+NAME                                                 CLASS    HOSTS   ADDRESS     PORTS   AGE
+ingress.networking.k8s.io/taskvault-public-ingress   <none>   *       localhost   80      46m
+
+NAME                                                           ADDRESSTYPE   PORTS   ENDPOINTS     AGE
+endpointslice.discovery.k8s.io/backend-n2st2                   IPv4          8080    10.244.0.22   31m
+endpointslice.discovery.k8s.io/backend-service-vxxwh           IPv4          8080    10.244.0.22   46m
+endpointslice.discovery.k8s.io/frontend-service-9p6pw          IPv4          8080    10.244.0.23   46m
+endpointslice.discovery.k8s.io/metrics-service-lb4nc           IPv4          8080    10.244.0.22   46m
+endpointslice.discovery.k8s.io/worker-gr4kq                    IPv4          8081    10.244.0.27   31m
+endpointslice.discovery.k8s.io/worker-internal-service-bdmn8   IPv4          8081    10.244.0.27   46m
+✓ deployment/frontend ready (1/1)
+✓ deployment/backend-api ready (1/1)
+✓ deployment/worker ready (1/1)
+✓ EndpointSlice exists for frontend-service
+✓ EndpointSlice exists for backend-service
+✓ EndpointSlice exists for worker-internal-service
+✓ EndpointSlice exists for metrics-service
+
+=== T115 — RBAC weakness (vuln-3) ===
+kubectl auth can-i list secrets --as=system:serviceaccount:demo-prod:backend-sa -n demo-prod
+=> yes
+✓ vuln-3 verified: backend-sa can list secrets
+
+=== T116 — Privileged worker + hostPath (vuln-5) ===
+worker pod: worker-74f8966d9-2q8th
+securityContext.privileged: true
+hostPath.path: /
+✓ vuln-5 verified: privileged worker with hostPath /
+
+=== T117 — Missing default-deny NetworkPolicy (vuln-7) ===
+NetworkPolicies in demo-prod:
+networkpolicy.networking.k8s.io/allow-backend-to-rds
+networkpolicy.networking.k8s.io/allow-backend-to-sqs
+networkpolicy.networking.k8s.io/allow-frontend-to-backend
+networkpolicy.networking.k8s.io/allow-worker-to-sqs
+✓ no default-deny NetworkPolicy objects
+pod/netpol-probe-20260610t130239z created
+pod/netpol-probe-20260610t130239z condition met
+✓ probe pod reached frontend-service (no default-deny blocking east-west)
+pod "netpol-probe-20260610t130239z" deleted
+
+Local K8s validation passed.
+Evidence saved to: artifacts/sample/k8s-local-validation-20260610t130239z.txt

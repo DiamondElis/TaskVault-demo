@@ -1,0 +1,106 @@
+{
+  "generated_at": "2026-06-14T03:11:07Z",
+  "spec_section": "README.md \u00a77",
+  "vulnerabilities": [
+    {
+      "id": "vuln-1",
+      "task": "T165",
+      "surface": "Internet-facing API exposure",
+      "what": "Public ALB + unauth /api/debug/status and /api/admin/reports/preview",
+      "where": "k8s/base/ingress.yaml, backend/src/routes/debug.ts",
+      "finding": "Internet-reachable backend path with weak/missing auth",
+      "attack": "T1190",
+      "evidence_artifact": "(pending)"
+    },
+    {
+      "id": "vuln-2",
+      "task": "T166",
+      "surface": "Cloud identity / permission abuse",
+      "what": "s3:* on arn:aws:s3:::taskvault-*",
+      "where": "infra/cdk/lib/iam-stack.ts",
+      "finding": "Workload IAM role has excessive data-store access",
+      "attack": "T1078.004",
+      "evidence_artifact": "(pending)"
+    },
+    {
+      "id": "vuln-3",
+      "task": "T167",
+      "surface": "K8s identity / RBAC escalation",
+      "what": "backend-sa can get/list secrets in demo-prod",
+      "where": "k8s/base/rbac.yaml",
+      "finding": "Service account can enumerate K8s Secrets",
+      "attack": "T1098.006",
+      "evidence_artifact": "(pending)"
+    },
+    {
+      "id": "vuln-4",
+      "task": "T168",
+      "surface": "Secrets / credential exposure",
+      "what": "Fake AWS/Stripe placeholders in repo + image fixture layer",
+      "where": ".env.example, backend/test/fixtures/fake-secrets.txt, backend/Dockerfile",
+      "finding": "Secret detected in repo/container layer",
+      "attack": "T1552.001",
+      "evidence_artifact": "(pending)"
+    },
+    {
+      "id": "vuln-5",
+      "task": "T169",
+      "surface": "Pod-to-node / container escape",
+      "what": "Worker privileged: true + hostPath: /",
+      "where": "k8s/base/worker-deployment.yaml",
+      "finding": "Pod has host-escape preconditions",
+      "attack": "T1611",
+      "evidence_artifact": "(pending)"
+    },
+    {
+      "id": "vuln-6",
+      "task": "T170",
+      "surface": "AWS workload credential pivot",
+      "what": "backend-sa IRSA \u2192 s3:* + secretsmanager:GetSecretValue",
+      "where": "k8s/base/serviceaccounts.yaml, infra/cdk/lib/iam-stack.ts",
+      "finding": "Pod compromise \u2192 AWS credential/data access",
+      "attack": "T1552.005",
+      "evidence_artifact": "(pending)"
+    },
+    {
+      "id": "vuln-7",
+      "task": "T171",
+      "surface": "Network segmentation / egress",
+      "what": "No default-deny NetworkPolicy; broad egress",
+      "where": "k8s/base/networkpolicies.yaml (omission)",
+      "finding": "Namespace permits broad east-west + outbound",
+      "attack": "T1046",
+      "evidence_artifact": "(pending)"
+    },
+    {
+      "id": "vuln-8",
+      "task": "T172",
+      "surface": "Image / runtime software risk",
+      "what": "node:16-alpine + lodash + runAsUser 0 + ALB exposure",
+      "where": "backend/Dockerfile, backend/package.json, k8s/base/backend-deployment.yaml",
+      "finding": "Running vulnerable image is internet-exposed",
+      "attack": "CVE/CWE class",
+      "evidence_artifact": "(pending)"
+    },
+    {
+      "id": "vuln-9",
+      "task": "T173",
+      "surface": "Data-store exposure",
+      "what": "S3 versioning disabled + uploads/sensitive/* fixtures",
+      "where": "infra/cdk/lib/storage-stack.ts, backend/src/db/seed-demo.ts",
+      "finding": "Sensitive store, weak protection, reachable by workload role",
+      "attack": "T1530",
+      "evidence_artifact": "(pending)"
+    },
+    {
+      "id": "vuln-10",
+      "task": "T174",
+      "surface": "CI/CD / supply-chain",
+      "what": "permissions: write-all + @main action + broad OIDC deploy role",
+      "where": ".github/workflows/deploy.yml, infra/cdk/lib/github-oidc-role-stack.ts",
+      "finding": "CI/CD can modify repo/deploy + assumes broad AWS role",
+      "attack": "T1195.002",
+      "evidence_artifact": "(pending)"
+    }
+  ]
+}

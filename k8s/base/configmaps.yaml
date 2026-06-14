@@ -1,0 +1,83 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: demo-prod
+  labels:
+    app.kubernetes.io/name: taskvault
+    app.kubernetes.io/part-of: taskvault-demo
+    app.kubernetes.io/managed-by: github-actions
+    cnapp.demo/environment: demo-prod
+data:
+  APP_ENV: demo-prod
+  AWS_REGION: us-east-1
+  S3_BUCKET: taskvault-user-files
+  REPORTS_S3_BUCKET: taskvault-reports
+  LOG_LEVEL: info
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: feature-flags
+  namespace: demo-prod
+  labels:
+    app.kubernetes.io/name: taskvault
+    app.kubernetes.io/part-of: taskvault-demo
+    app.kubernetes.io/managed-by: github-actions
+    cnapp.demo/environment: demo-prod
+data:
+  FEATURE_ADMIN_REPORTS: "true"
+  FEATURE_ADMIN_PREVIEW: "true"
+  FEATURE_K8S_SECRET_LIST: "false"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: frontend-config
+  namespace: demo-prod
+  labels:
+    app.kubernetes.io/name: taskvault
+    app.kubernetes.io/component: frontend
+    app.kubernetes.io/part-of: taskvault-demo
+    app.kubernetes.io/managed-by: github-actions
+    cnapp.demo/environment: demo-prod
+data:
+  API_BASE_URL: ""
+  WORKER_API_URL: ""
+  FEATURE_ADMIN_REPORTS: "true"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backend-config
+  namespace: demo-prod
+  labels:
+    app.kubernetes.io/name: taskvault
+    app.kubernetes.io/component: backend-api
+    app.kubernetes.io/part-of: taskvault-demo
+    app.kubernetes.io/managed-by: github-actions
+    cnapp.demo/environment: demo-prod
+data:
+  PORT: "8080"
+  NODE_ENV: production
+  BUILD_SHA: k8s-demo
+  SQS_QUEUE_URL: "https://sqs.us-east-1.amazonaws.com/<ACCT>/taskvault-jobs"
+  DEMO_ADMIN_EMAIL: admin@taskvault.demo
+  DEMO_ADMIN_PASSWORD: password123
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: worker-config
+  namespace: demo-prod
+  labels:
+    app.kubernetes.io/name: taskvault
+    app.kubernetes.io/component: worker
+    app.kubernetes.io/part-of: taskvault-demo
+    app.kubernetes.io/managed-by: github-actions
+    cnapp.demo/environment: demo-prod
+data:
+  WORKER_PORT: "8081"
+  NODE_ENV: production
+  BUILD_SHA: k8s-demo
+  SQS_QUEUE_URL: "https://sqs.us-east-1.amazonaws.com/<ACCT>/taskvault-jobs"

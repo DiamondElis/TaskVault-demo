@@ -1,0 +1,8 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: report-cronjob
+  namespace: demo-prod
+spec:
+  suspend: false
+  schedule: "*/15 * * * *"

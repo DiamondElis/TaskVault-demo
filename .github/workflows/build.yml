@@ -1,0 +1,105 @@
+# T176 — sane CI baseline: test, build, docker push to ECR via OIDC.
+# Contrast with deploy.yml: tightly-scoped workflow permissions (not write-all).
+name: Build and push images
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: us-east-1
+  IMAGE_TAG: ${{ github.sha }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            backend/package-lock.json
+            worker/package-lock.json
+            frontend/package-lock.json
+
+      - name: Install and test backend
+        working-directory: backend
+        run: |
+          npm ci
+          npm test
+          npm run build
+
+      - name: Install and test worker
+        working-directory: worker
+        run: |
+          npm ci
+          npm test
+          npm run build
+
+      - name: Build frontend
+        working-directory: frontend
+        run: |
+          npm ci
+          npm run build
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Configure AWS credentials (OIDC)
+        if: github.event_name != 'pull_request'
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_OIDC_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        if: github.event_name != 'pull_request'
+        id: ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Resolve ECR registry
+        if: github.event_name != 'pull_request'
+        id: registry
+        run: |
+          ACCOUNT="$(aws sts get-caller-identity --query Account --output text)"
+          echo "registry=${ACCOUNT}.dkr.ecr.${AWS_REGION}.amazonaws.com" >> "$GITHUB_OUTPUT"
+
+      - name: Build and push images (tag = commit SHA)
+        if: github.event_name != 'pull_request'
+        env:
+          REGISTRY: ${{ steps.registry.outputs.registry }}
+        run: |
+          set -euo pipefail
+          docker build -t "${REGISTRY}/taskvault-backend:${IMAGE_TAG}" \
+            -f backend/Dockerfile --target stage-1 .
+          docker build -t "${REGISTRY}/taskvault-backend-migrator:${IMAGE_TAG}-migrator" \
+            -f backend/Dockerfile --target migrator .
+          docker build -t "${REGISTRY}/taskvault-worker:${IMAGE_TAG}" \
+            -f worker/Dockerfile .
+          docker build -t "${REGISTRY}/taskvault-frontend:${IMAGE_TAG}" \
+            -f frontend/Dockerfile .
+          for img in taskvault-backend taskvault-backend-migrator taskvault-worker taskvault-frontend; do
+            if [[ "$img" == "taskvault-backend-migrator" ]]; then
+              docker push "${REGISTRY}/${img}:${IMAGE_TAG}-migrator"
+            else
+              docker push "${REGISTRY}/${img}:${IMAGE_TAG}"
+            fi
+          done
+          echo "Pushed images tagged ${IMAGE_TAG} to ${REGISTRY}"
+
+      - name: Docker build only (PR — no ECR push)
+        if: github.event_name == 'pull_request'
+        run: |
+          docker build -f backend/Dockerfile --target stage-1 .
+          docker build -f backend/Dockerfile --target migrator .
+          docker build -f worker/Dockerfile .
+          docker build -f frontend/Dockerfile .

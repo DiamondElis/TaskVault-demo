@@ -1,0 +1,99 @@
+# vuln-7: allow-only policies are present; default-deny-ingress and default-deny-egress
+# are DELIBERATELY OMITTED so east-west and outbound traffic remain broad.
+# See docs/intentional-risks.md — this is intentional, not forgotten.
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-frontend-to-backend
+  namespace: demo-prod
+  labels:
+    app.kubernetes.io/name: taskvault
+    app.kubernetes.io/part-of: taskvault-demo
+    app.kubernetes.io/managed-by: github-actions
+    cnapp.demo/environment: demo-prod
+    cnapp.demo/intentional-risk: "true"
+    cnapp.demo/risk-id: vuln-7
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/component: backend-api
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/component: frontend
+      ports:
+        - protocol: TCP
+          port: 8080
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-backend-to-rds
+  namespace: demo-prod
+  labels:
+    app.kubernetes.io/name: taskvault
+    app.kubernetes.io/part-of: taskvault-demo
+    app.kubernetes.io/managed-by: github-actions
+    cnapp.demo/environment: demo-prod
+    cnapp.demo/intentional-risk: "true"
+    cnapp.demo/risk-id: vuln-7
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/component: backend-api
+  policyTypes:
+    - Egress
+  egress:
+    - ports:
+        - protocol: TCP
+          port: 5432
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-backend-to-sqs
+  namespace: demo-prod
+  labels:
+    app.kubernetes.io/name: taskvault
+    app.kubernetes.io/part-of: taskvault-demo
+    app.kubernetes.io/managed-by: github-actions
+    cnapp.demo/environment: demo-prod
+    cnapp.demo/intentional-risk: "true"
+    cnapp.demo/risk-id: vuln-7
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/component: backend-api
+  policyTypes:
+    - Egress
+  egress:
+    - ports:
+        - protocol: TCP
+          port: 443
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-worker-to-sqs
+  namespace: demo-prod
+  labels:
+    app.kubernetes.io/name: taskvault
+    app.kubernetes.io/part-of: taskvault-demo
+    app.kubernetes.io/managed-by: github-actions
+    cnapp.demo/environment: demo-prod
+    cnapp.demo/intentional-risk: "true"
+    cnapp.demo/risk-id: vuln-7
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/component: worker
+  policyTypes:
+    - Egress
+  egress:
+    - ports:
+        - protocol: TCP
+          port: 443

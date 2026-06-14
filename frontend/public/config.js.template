@@ -1,0 +1,5 @@
+window.__TASKVAULT_CONFIG__ = {
+  apiBaseUrl: '${API_BASE_URL}',
+  workerApiUrl: '${WORKER_API_URL}',
+  featureAdminReports: ${FEATURE_ADMIN_REPORTS},
+};

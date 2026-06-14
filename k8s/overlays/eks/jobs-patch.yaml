@@ -1,0 +1,17 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: db-migrator
+  namespace: demo-prod
+spec:
+  template:
+    spec:
+      containers:
+        - name: db-migrator
+          image: __TASKVAULT_BACKEND_MIGRATOR_IMAGE__
+          imagePullPolicy: Always
+          env:
+            - name: USE_SECRETS_MANAGER
+              value: "true"
+            - name: SKIP_DEMO_SEED
+              value: "true"

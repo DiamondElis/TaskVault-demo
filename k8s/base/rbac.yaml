@@ -1,0 +1,188 @@
+# vuln-3: backend-sa can enumerate Secrets in demo-prod (spec §4.2).
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: backend-secret-reader
+  namespace: demo-prod
+  labels:
+    app.kubernetes.io/name: taskvault
+    app.kubernetes.io/component: backend-api
+    app.kubernetes.io/part-of: taskvault-demo
+    app.kubernetes.io/managed-by: github-actions
+    cnapp.demo/environment: demo-prod
+    cnapp.demo/intentional-risk: "true"
+    cnapp.demo/risk-id: vuln-3
+rules:
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: backend-secret-reader-binding
+  namespace: demo-prod
+  labels:
+    app.kubernetes.io/name: taskvault
+    app.kubernetes.io/component: backend-api
+    app.kubernetes.io/part-of: taskvault-demo
+    app.kubernetes.io/managed-by: github-actions
+    cnapp.demo/environment: demo-prod
+    cnapp.demo/intentional-risk: "true"
+    cnapp.demo/risk-id: vuln-3
+subjects:
+  - kind: ServiceAccount
+    name: backend-sa
+    namespace: demo-prod
+roleRef:
+  kind: Role
+  name: backend-secret-reader
+  apiGroup: rbac.authorization.k8s.io
+---
+# Good-contrast RBAC: worker reads only its own ConfigMap.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: worker-job-reader
+  namespace: demo-prod
+  labels:
+    app.kubernetes.io/name: taskvault
+    app.kubernetes.io/component: worker
+    app.kubernetes.io/part-of: taskvault-demo
+    app.kubernetes.io/managed-by: github-actions
+    cnapp.demo/environment: demo-prod
+rules:
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    resourceNames: ["worker-config"]
+    verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: worker-job-reader-binding
+  namespace: demo-prod
+  labels:
+    app.kubernetes.io/name: taskvault
+    app.kubernetes.io/component: worker
+    app.kubernetes.io/part-of: taskvault-demo
+    app.kubernetes.io/managed-by: github-actions
+    cnapp.demo/environment: demo-prod
+subjects:
+  - kind: ServiceAccount
+    name: worker-sa
+    namespace: demo-prod
+roleRef:
+  kind: Role
+  name: worker-job-reader
+  apiGroup: rbac.authorization.k8s.io
+---
+# Good-contrast RBAC: shared app config read for all app SAs.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: app-config-reader
+  namespace: demo-prod
+  labels:
+    app.kubernetes.io/name: taskvault
+    app.kubernetes.io/part-of: taskvault-demo
+    app.kubernetes.io/managed-by: github-actions
+    cnapp.demo/environment: demo-prod
+rules:
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    resourceNames: ["app-config", "feature-flags"]
+    verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: app-config-reader-frontend-binding
+  namespace: demo-prod
+  labels:
+    app.kubernetes.io/name: taskvault
+    app.kubernetes.io/component: frontend
+    app.kubernetes.io/part-of: taskvault-demo
+    app.kubernetes.io/managed-by: github-actions
+    cnapp.demo/environment: demo-prod
+subjects:
+  - kind: ServiceAccount
+    name: frontend-sa
+    namespace: demo-prod
+roleRef:
+  kind: Role
+  name: app-config-reader
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: app-config-reader-backend-binding
+  namespace: demo-prod
+  labels:
+    app.kubernetes.io/name: taskvault
+    app.kubernetes.io/component: backend-api
+    app.kubernetes.io/part-of: taskvault-demo
+    app.kubernetes.io/managed-by: github-actions
+    cnapp.demo/environment: demo-prod
+subjects:
+  - kind: ServiceAccount
+    name: backend-sa
+    namespace: demo-prod
+roleRef:
+  kind: Role
+  name: app-config-reader
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: app-config-reader-worker-binding
+  namespace: demo-prod
+  labels:
+    app.kubernetes.io/name: taskvault
+    app.kubernetes.io/component: worker
+    app.kubernetes.io/part-of: taskvault-demo
+    app.kubernetes.io/managed-by: github-actions
+    cnapp.demo/environment: demo-prod
+subjects:
+  - kind: ServiceAccount
+    name: worker-sa
+    namespace: demo-prod
+roleRef:
+  kind: Role
+  name: app-config-reader
+  apiGroup: rbac.authorization.k8s.io
+# ---
+# T087 (optional): uncomment for a stronger cluster-wide RBAC finding (vuln-3).
+# apiVersion: rbac.authorization.k8s.io/v1
+# kind: ClusterRole
+# metadata:
+#   name: demo-overbroad-reader
+#   labels:
+#     app.kubernetes.io/name: taskvault
+#     app.kubernetes.io/part-of: taskvault-demo
+#     cnapp.demo/intentional-risk: "true"
+#     cnapp.demo/risk-id: vuln-3
+# rules:
+#   - apiGroups: [""]
+#     resources: ["secrets", "configmaps"]
+#     verbs: ["get", "list", "watch"]
+# ---
+# apiVersion: rbac.authorization.k8s.io/v1
+# kind: ClusterRoleBinding
+# metadata:
+#   name: demo-overbroad-reader-binding
+#   labels:
+#     app.kubernetes.io/name: taskvault
+#     app.kubernetes.io/part-of: taskvault-demo
+#     cnapp.demo/intentional-risk: "true"
+#     cnapp.demo/risk-id: vuln-3
+# subjects:
+#   - kind: ServiceAccount
+#     name: backend-sa
+#     namespace: demo-prod
+# roleRef:
+#   kind: ClusterRole
+#   name: demo-overbroad-reader
+#   apiGroup: rbac.authorization.k8s.io

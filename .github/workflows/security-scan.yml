@@ -1,0 +1,129 @@
+# T177/T182 — security scanners as workflow artifacts; intentionally NO deploy gate (vuln-10).
+name: Security scan
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  AWS_REGION: us-east-1
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    # Intentionally always succeeds — findings are evidence, not blockers (vuln-10).
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build backend image for scanning
+        run: |
+          docker build -t taskvault-backend:ci-scan \
+            -f backend/Dockerfile --target stage-1 .
+
+      - name: Trivy image scan
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: taskvault-backend:ci-scan
+          format: json
+          output: trivy-backend.json
+          severity: HIGH,CRITICAL
+          scanners: vuln,secret
+        continue-on-error: true
+
+      - name: Grype image scan
+        uses: anchore/scan-action@v3
+        with:
+          image: taskvault-backend:ci-scan
+          output-format: json
+          fail-build: false
+        continue-on-error: true
+
+      - name: Normalize Grype output
+        if: always()
+        run: |
+          if [[ -f results.json ]]; then
+            mv results.json grype-backend.json
+          else
+            echo '{"source":"grype","status":"skipped"}' > grype-backend.json
+          fi
+
+      - name: Syft SBOM (T182)
+        uses: anchore/sbom-action@v0
+        with:
+          image: taskvault-backend:ci-scan
+          artifact-name: sbom-backend.spdx.json
+          output-file: sbom-backend.spdx.json
+          format: spdx-json
+        continue-on-error: true
+
+      - name: Gitleaks repo scan
+        run: |
+          docker run --rm -v "$PWD:/repo" ghcr.io/gitleaks/gitleaks:latest \
+            detect --source /repo --no-git -f json -r /repo/gitleaks.json \
+            --config /repo/scripts/gitleaks-verify.toml || true
+          [[ -f gitleaks.json ]] || echo '[]' > gitleaks.json
+        continue-on-error: true
+
+      - name: Checkov CDK scan
+        working-directory: infra/cdk
+        run: |
+          npm ci
+          npm run build
+          npx cdk synth --quiet --no-lookups -o cdk.out
+        continue-on-error: true
+
+      - name: Run Checkov
+        if: always()
+        run: |
+          docker run --rm -v "$PWD/infra/cdk/cdk.out:/cdk.out:ro" bridgecrew/checkov:latest \
+            -d /cdk.out --framework cloudformation --compact -o json \
+            > checkov.json || echo '{"results":{"failed_checks":[]}}' > checkov.json
+        continue-on-error: true
+
+      - name: Render k8s manifests for Kubescape
+        run: |
+          mkdir -p scan-out
+          kubectl kustomize k8s/overlays/local > scan-out/manifests.yaml
+          sed -i \
+            -e 's/__TASKVAULT_POSTGRES_IP__/172.18.0.100/g' \
+            -e 's/__TASKVAULT_LOCALSTACK_IP__/172.18.0.101/g' \
+            scan-out/manifests.yaml || true
+
+      - name: Kubescape manifest scan
+        run: |
+          docker run --rm -v "$PWD/scan-out:/scan" kubescape/kubescape:latest \
+            scan framework nsa --format json --output /scan/kubescape.json \
+            --submit=false -f /scan/manifests.yaml || \
+            echo '{"framework":"nsa","status":"skipped"}' > kubescape.json
+          cp scan-out/kubescape.json kubescape.json 2>/dev/null || true
+          [[ -f kubescape.json ]] || echo '{}' > kubescape.json
+        continue-on-error: true
+
+      - name: Upload scanner artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-scan-${{ github.sha }}
+          path: |
+            trivy-backend.json
+            grype-backend.json
+            sbom-backend.spdx.json
+            gitleaks.json
+            checkov.json
+            kubescape.json
+          if-no-files-found: warn
+
+      - name: Scanner summary (no gate)
+        if: always()
+        run: |
+          echo "Security scans complete. Artifacts uploaded — deploy is NOT gated on results (vuln-10)."
+          ls -la trivy-backend.json grype-backend.json sbom-backend.spdx.json gitleaks.json checkov.json kubescape.json 2>/dev/null || true

@@ -1,0 +1,1036 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: github-actions
+    app.kubernetes.io/name: taskvault
+    app.kubernetes.io/part-of: taskvault-demo
+    cnapp.demo/environment: demo-prod
+    pod-security.kubernetes.io/audit: baseline
+    pod-security.kubernetes.io/enforce: privileged
+    pod-security.kubernetes.io/warn: baseline
+  name: demo-prod
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::000000000000:role/taskvault-backend-role-local-dummy
+  labels:
+    app.kubernetes.io/component: backend-api
+    app.kubernetes.io/managed-by: github-actions
+    app.kubernetes.io/name: taskvault
+    app.kubernetes.io/part-of: taskvault-demo
+    cnapp.demo/environment: demo-prod
+    cnapp.demo/intentional-risk: "true"
+    cnapp.demo/risk-id: vuln-6
+  name: backend-sa
+  namespace: demo-prod
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    app.kubernetes.io/component: db-migrator
+    app.kubernetes.io/managed-by: github-actions
+    app.kubernetes.io/name: taskvault
+    app.kubernetes.io/part-of: taskvault-demo
+    cnapp.demo/environment: demo-prod
+  name: db-migrator-sa
+  namespace: demo-prod
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    app.kubernetes.io/component: frontend
+    app.kubernetes.io/managed-by: github-actions
+    app.kubernetes.io/name: taskvault
+    app.kubernetes.io/part-of: taskvault-demo
+    cnapp.demo/environment: demo-prod
+  name: frontend-sa
+  namespace: demo-prod
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    app.kubernetes.io/component: report-job
+    app.kubernetes.io/managed-by: github-actions
+    app.kubernetes.io/name: taskvault
+    app.kubernetes.io/part-of: taskvault-demo
+    cnapp.demo/environment: demo-prod
+  name: report-job-sa
+  namespace: demo-prod
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::000000000000:role/taskvault-worker-role-local-dummy
+  labels:
+    app.kubernetes.io/component: worker
+    app.kubernetes.io/managed-by: github-actions
+    app.kubernetes.io/name: taskvault
+    app.kubernetes.io/part-of: taskvault-demo
+    cnapp.demo/environment: demo-prod
+    cnapp.demo/intentional-risk: "true"
+    cnapp.demo/risk-id: vuln-6
+  name: worker-sa
+  namespace: demo-prod
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: github-actions
+    app.kubernetes.io/name: taskvault
+    app.kubernetes.io/part-of: taskvault-demo
+    cnapp.demo/environment: demo-prod
+  name: app-config-reader
+  namespace: demo-prod
+rules:
+- apiGroups:
+  - ""
+  resourceNames:
+  - app-config
+  - feature-flags
+  resources:
+  - configmaps
+  verbs:
+  - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  labels:
+    app.kubernetes.io/component: backend-api
+    app.kubernetes.io/managed-by: github-actions
+    app.kubernetes.io/name: taskvault
+    app.kubernetes.io/part-of: taskvault-demo
+    cnapp.demo/environment: demo-prod
+    cnapp.demo/intentional-risk: "true"
+    cnapp.demo/risk-id: vuln-3
+  name: backend-secret-reader
+  namespace: demo-prod
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - get
+  - list
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  labels:
+    app.kubernetes.io/component: worker
+    app.kubernetes.io/managed-by: github-actions
+    app.kubernetes.io/name: taskvault
+    app.kubernetes.io/part-of: taskvault-demo
+    cnapp.demo/environment: demo-prod
+  name: worker-job-reader
+  namespace: demo-prod
+rules:
+- apiGroups:
+  - ""
+  resourceNames:
+  - worker-config
+  resources:
+  - configmaps
+  verbs:
+  - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  labels:
+    app.kubernetes.io/component: backend-api
+    app.kubernetes.io/managed-by: github-actions
+    app.kubernetes.io/name: taskvault
+    app.kubernetes.io/part-of: taskvault-demo
+    cnapp.demo/environment: demo-prod
+  name: app-config-reader-backend-binding
+  namespace: demo-prod
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: app-config-reader
+subjects:
+- kind: ServiceAccount
+  name: backend-sa
+  namespace: demo-prod
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  labels:
+    app.kubernetes.io/component: frontend
+    app.kubernetes.io/managed-by: github-actions
+    app.kubernetes.io/name: taskvault
+    app.kubernetes.io/part-of: taskvault-demo
+    cnapp.demo/environment: demo-prod
+  name: app-config-reader-frontend-binding
+  namespace: demo-prod
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: app-config-reader
+subjects:
+- kind: ServiceAccount
+  name: frontend-sa
+  namespace: demo-prod
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  labels:
+    app.kubernetes.io/component: worker
+    app.kubernetes.io/managed-by: github-actions
+    app.kubernetes.io/name: taskvault
+    app.kubernetes.io/part-of: taskvault-demo
+    cnapp.demo/environment: demo-prod
+  name: app-config-reader-worker-binding
+  namespace: demo-prod
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: app-config-reader
+subjects:
+- kind: ServiceAccount
+  name: worker-sa
+  namespace: demo-prod
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  labels:
+    app.kubernetes.io/component: backend-api
+    app.kubernetes.io/managed-by: github-actions
+    app.kubernetes.io/name: taskvault
+    app.kubernetes.io/part-of: taskvault-demo
+    cnapp.demo/environment: demo-prod
+    cnapp.demo/intentional-risk: "true"
+    cnapp.demo/risk-id: vuln-3
+  name: backend-secret-reader-binding
+  namespace: demo-prod
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: backend-secret-reader
+subjects:
+- kind: ServiceAccount
+  name: backend-sa
+  namespace: demo-prod
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  labels:
+    app.kubernetes.io/component: worker
+    app.kubernetes.io/managed-by: github-actions
+    app.kubernetes.io/name: taskvault
+    app.kubernetes.io/part-of: taskvault-demo
+    cnapp.demo/environment: demo-prod
+  name: worker-job-reader-binding
+  namespace: demo-prod
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: worker-job-reader
+subjects:
+- kind: ServiceAccount
+  name: worker-sa
+  namespace: demo-prod
+---
+apiVersion: v1
+data:
+  APP_ENV: demo-prod
+  AWS_ENDPOINT: http://__TASKVAULT_LOCALSTACK_IP__:4566
+  AWS_REGION: us-east-1
+  LOG_LEVEL: info
+  REPORTS_S3_BUCKET: taskvault-reports
+  S3_BUCKET: taskvault-user-files
+kind: ConfigMap
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: github-actions
+    app.kubernetes.io/name: taskvault
+    app.kubernetes.io/part-of: taskvault-demo
+    cnapp.demo/environment: demo-prod
+  name: app-config
+  namespace: demo-prod
+---
+apiVersion: v1
+data:
+  BUILD_SHA: k8s-demo
+  DEMO_ADMIN_EMAIL: admin@taskvault.demo
+  DEMO_ADMIN_PASSWORD: password123
+  NODE_ENV: production
+  PORT: "8080"
+  SQS_QUEUE_URL: http://__TASKVAULT_LOCALSTACK_IP__:4566/000000000000/taskvault-jobs
+kind: ConfigMap
+metadata:
+  labels:
+    app.kubernetes.io/component: backend-api
+    app.kubernetes.io/managed-by: github-actions
+    app.kubernetes.io/name: taskvault
+    app.kubernetes.io/part-of: taskvault-demo
+    cnapp.demo/environment: demo-prod
+  name: backend-config
+  namespace: demo-prod
+---
+apiVersion: v1
+data:
+  FEATURE_ADMIN_PREVIEW: "true"
+  FEATURE_ADMIN_REPORTS: "true"
+  FEATURE_K8S_SECRET_LIST: "false"
+kind: ConfigMap
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: github-actions
+    app.kubernetes.io/name: taskvault
+    app.kubernetes.io/part-of: taskvault-demo
+    cnapp.demo/environment: demo-prod
+  name: feature-flags
+  namespace: demo-prod
+---
+apiVersion: v1
+data:
+  API_BASE_URL: ""
+  FEATURE_ADMIN_REPORTS: "true"
+  WORKER_API_URL: ""
+kind: ConfigMap
+metadata:
+  labels:
+    app.kubernetes.io/component: frontend
+    app.kubernetes.io/managed-by: github-actions
+    app.kubernetes.io/name: taskvault
+    app.kubernetes.io/part-of: taskvault-demo
+    cnapp.demo/environment: demo-prod
+  name: frontend-config
+  namespace: demo-prod
+---
+apiVersion: v1
+data:
+  BUILD_SHA: k8s-demo
+  NODE_ENV: production
+  SQS_QUEUE_URL: http://__TASKVAULT_LOCALSTACK_IP__:4566/000000000000/taskvault-jobs
+  WORKER_PORT: "8081"
+kind: ConfigMap
+metadata:
+  labels:
+    app.kubernetes.io/component: worker
+    app.kubernetes.io/managed-by: github-actions
+    app.kubernetes.io/name: taskvault
+    app.kubernetes.io/part-of: taskvault-demo
+    cnapp.demo/environment: demo-prod
+  name: worker-config
+  namespace: demo-prod
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: github-actions
+    app.kubernetes.io/name: taskvault
+    app.kubernetes.io/part-of: taskvault-demo
+    cnapp.demo/environment: demo-prod
+    cnapp.demo/intentional-risk: "true"
+    cnapp.demo/risk-id: vuln-4
+  name: app-secret
+  namespace: demo-prod
+stringData:
+  JWT_SECRET: demo-jwt-signing-secret-not-real
+type: Opaque
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: github-actions
+    app.kubernetes.io/name: taskvault
+    app.kubernetes.io/part-of: taskvault-demo
+    cnapp.demo/environment: demo-prod
+    cnapp.demo/intentional-risk: "true"
+    cnapp.demo/risk-id: vuln-4
+  name: db-credentials
+  namespace: demo-prod
+stringData:
+  DATABASE_URL: postgres://demo:password@__TASKVAULT_POSTGRES_IP__:5432/taskvault
+type: Opaque
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: github-actions
+    app.kubernetes.io/name: taskvault
+    app.kubernetes.io/part-of: taskvault-demo
+    cnapp.demo/environment: demo-prod
+    cnapp.demo/intentional-risk: "true"
+    cnapp.demo/risk-id: vuln-4
+  name: fake-api-key
+  namespace: demo-prod
+stringData:
+  FAKE_AWS_ACCESS_KEY_ID: AKIAFAKEDEMO123456
+  FAKE_STRIPE_SECRET_KEY: sk_test_fake_demo_value
+type: Opaque
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/component: backend-api
+    app.kubernetes.io/name: taskvault
+    app.kubernetes.io/part-of: taskvault-demo
+    cnapp.demo/local-alias: "true"
+  name: backend
+  namespace: demo-prod
+spec:
+  ports:
+  - name: http
+    port: 8080
+    protocol: TCP
+    targetPort: http
+  selector:
+    app.kubernetes.io/component: backend-api
+    app.kubernetes.io/name: taskvault
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/component: backend-api
+    app.kubernetes.io/managed-by: github-actions
+    app.kubernetes.io/name: taskvault
+    app.kubernetes.io/part-of: taskvault-demo
+    cnapp.demo/environment: demo-prod
+  name: backend-service
+  namespace: demo-prod
+spec:
+  ports:
+  - name: http
+    port: 8080
+    protocol: TCP
+    targetPort: http
+  selector:
+    app.kubernetes.io/component: backend-api
+    app.kubernetes.io/name: taskvault
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/component: frontend
+    app.kubernetes.io/managed-by: github-actions
+    app.kubernetes.io/name: taskvault
+    app.kubernetes.io/part-of: taskvault-demo
+    cnapp.demo/environment: demo-prod
+  name: frontend-service
+  namespace: demo-prod
+spec:
+  ports:
+  - name: http
+    port: 80
+    protocol: TCP
+    targetPort: http
+  selector:
+    app.kubernetes.io/component: frontend
+    app.kubernetes.io/name: taskvault
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/component: backend-api
+    app.kubernetes.io/managed-by: github-actions
+    app.kubernetes.io/name: taskvault
+    app.kubernetes.io/part-of: taskvault-demo
+    cnapp.demo/environment: demo-prod
+  name: metrics-service
+  namespace: demo-prod
+spec:
+  ports:
+  - name: metrics
+    port: 8080
+    protocol: TCP
+    targetPort: http
+  selector:
+    app.kubernetes.io/component: backend-api
+    app.kubernetes.io/name: taskvault
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/component: worker
+    app.kubernetes.io/name: taskvault
+    app.kubernetes.io/part-of: taskvault-demo
+    cnapp.demo/local-alias: "true"
+  name: worker
+  namespace: demo-prod
+spec:
+  ports:
+  - name: http
+    port: 8081
+    protocol: TCP
+    targetPort: http
+  selector:
+    app.kubernetes.io/component: worker
+    app.kubernetes.io/name: taskvault
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/component: worker
+    app.kubernetes.io/managed-by: github-actions
+    app.kubernetes.io/name: taskvault
+    app.kubernetes.io/part-of: taskvault-demo
+    cnapp.demo/environment: demo-prod
+  name: worker-internal-service
+  namespace: demo-prod
+spec:
+  ports:
+  - name: http
+    port: 8081
+    protocol: TCP
+    targetPort: http
+  selector:
+    app.kubernetes.io/component: worker
+    app.kubernetes.io/name: taskvault
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/component: backend-api
+    app.kubernetes.io/managed-by: github-actions
+    app.kubernetes.io/name: taskvault
+    app.kubernetes.io/part-of: taskvault-demo
+    cnapp.demo/environment: demo-prod
+    cnapp.demo/intentional-risk: "true"
+    cnapp.demo/risk-id: vuln-8
+  name: backend-api
+  namespace: demo-prod
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: backend-api
+      app.kubernetes.io/name: taskvault
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: backend-api
+        app.kubernetes.io/managed-by: github-actions
+        app.kubernetes.io/name: taskvault
+        app.kubernetes.io/part-of: taskvault-demo
+        cnapp.demo/environment: demo-prod
+        cnapp.demo/intentional-risk: "true"
+        cnapp.demo/risk-id: vuln-8
+    spec:
+      containers:
+      - env:
+        - name: USE_SECRETS_MANAGER
+          value: "false"
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              key: DATABASE_URL
+              name: db-credentials
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              key: JWT_SECRET
+              name: app-secret
+        - name: K8S_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        envFrom:
+        - configMapRef:
+            name: app-config
+        - configMapRef:
+            name: backend-config
+        - configMapRef:
+            name: feature-flags
+        image: taskvault-backend:local
+        imagePullPolicy: Never
+        livenessProbe:
+          httpGet:
+            path: /api/healthz
+            port: http
+          initialDelaySeconds: 15
+          periodSeconds: 10
+        name: backend-api
+        ports:
+        - containerPort: 8080
+          name: http
+        readinessProbe:
+          httpGet:
+            path: /api/readyz
+            port: http
+          initialDelaySeconds: 10
+          periodSeconds: 5
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+        securityContext:
+          runAsUser: 0
+        volumeMounts:
+        - mountPath: /etc/taskvault/backend
+          name: backend-config-volume
+          readOnly: true
+        - mountPath: /tmp
+          name: tmp
+      serviceAccountName: backend-sa
+      volumes:
+      - configMap:
+          name: backend-config
+        name: backend-config-volume
+      - emptyDir: {}
+        name: tmp
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/component: frontend
+    app.kubernetes.io/managed-by: github-actions
+    app.kubernetes.io/name: taskvault
+    app.kubernetes.io/part-of: taskvault-demo
+    cnapp.demo/environment: demo-prod
+  name: frontend
+  namespace: demo-prod
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: frontend
+      app.kubernetes.io/name: taskvault
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: frontend
+        app.kubernetes.io/managed-by: github-actions
+        app.kubernetes.io/name: taskvault
+        app.kubernetes.io/part-of: taskvault-demo
+        cnapp.demo/environment: demo-prod
+    spec:
+      containers:
+      - envFrom:
+        - configMapRef:
+            name: frontend-config
+        - configMapRef:
+            name: app-config
+        - configMapRef:
+            name: feature-flags
+        image: taskvault-frontend:local
+        imagePullPolicy: Never
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: http
+          initialDelaySeconds: 10
+          periodSeconds: 10
+        name: frontend
+        ports:
+        - containerPort: 8080
+          name: http
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: http
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        resources:
+          limits:
+            cpu: 200m
+            memory: 128Mi
+          requests:
+            cpu: 50m
+            memory: 64Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: false
+          runAsNonRoot: true
+          runAsUser: 1001
+        volumeMounts:
+        - mountPath: /etc/taskvault/frontend
+          name: frontend-config-volume
+          readOnly: true
+        - mountPath: /var/cache/nginx
+          name: nginx-cache
+        - mountPath: /var/run
+          name: nginx-run
+      securityContext:
+        fsGroup: 1001
+        runAsGroup: 1001
+        runAsNonRoot: true
+        runAsUser: 1001
+      serviceAccountName: frontend-sa
+      volumes:
+      - configMap:
+          name: frontend-config
+        name: frontend-config-volume
+      - emptyDir: {}
+        name: nginx-cache
+      - emptyDir: {}
+        name: nginx-run
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/component: worker
+    app.kubernetes.io/managed-by: github-actions
+    app.kubernetes.io/name: taskvault
+    app.kubernetes.io/part-of: taskvault-demo
+    cnapp.demo/environment: demo-prod
+    cnapp.demo/intentional-risk: "true"
+    cnapp.demo/risk-id: vuln-5
+  name: worker
+  namespace: demo-prod
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: worker
+      app.kubernetes.io/name: taskvault
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: worker
+        app.kubernetes.io/managed-by: github-actions
+        app.kubernetes.io/name: taskvault
+        app.kubernetes.io/part-of: taskvault-demo
+        cnapp.demo/environment: demo-prod
+        cnapp.demo/intentional-risk: "true"
+        cnapp.demo/risk-id: vuln-5
+    spec:
+      containers:
+      - env:
+        - name: USE_SECRETS_MANAGER
+          value: "false"
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              key: DATABASE_URL
+              name: db-credentials
+        envFrom:
+        - configMapRef:
+            name: app-config
+        - configMapRef:
+            name: worker-config
+        image: taskvault-worker:local
+        imagePullPolicy: Never
+        livenessProbe:
+          httpGet:
+            path: /worker/healthz
+            port: http
+          initialDelaySeconds: 15
+          periodSeconds: 10
+        name: worker
+        ports:
+        - containerPort: 8081
+          name: http
+        readinessProbe:
+          httpGet:
+            path: /worker/readyz
+            port: http
+          initialDelaySeconds: 10
+          periodSeconds: 5
+        resources:
+          limits:
+            cpu: 500m
+            memory: 512Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi
+        securityContext:
+          privileged: true
+        volumeMounts:
+        - mountPath: /etc/taskvault/worker
+          name: worker-config-volume
+          readOnly: true
+        - mountPath: /tmp
+          name: tmp
+        - mountPath: /host
+          name: host-root
+      serviceAccountName: worker-sa
+      volumes:
+      - configMap:
+          name: worker-config
+        name: worker-config-volume
+      - emptyDir: {}
+        name: tmp
+      - hostPath:
+          path: /
+          type: Directory
+        name: host-root
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  labels:
+    app.kubernetes.io/component: report-cronjob
+    app.kubernetes.io/managed-by: github-actions
+    app.kubernetes.io/name: taskvault
+    app.kubernetes.io/part-of: taskvault-demo
+    cnapp.demo/environment: demo-prod
+  name: report-cronjob
+  namespace: demo-prod
+spec:
+  concurrencyPolicy: Forbid
+  failedJobsHistoryLimit: 2
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/component: report-cronjob
+            app.kubernetes.io/managed-by: github-actions
+            app.kubernetes.io/name: taskvault
+            app.kubernetes.io/part-of: taskvault-demo
+            cnapp.demo/environment: demo-prod
+        spec:
+          containers:
+          - command:
+            - sh
+            - -c
+            - |
+              set -eu
+              wget -qO- http://worker-internal-service:8081/worker/readyz >/dev/null
+              echo "TaskVault report-cronjob tick"
+            envFrom:
+            - configMapRef:
+                name: app-config
+            - configMapRef:
+                name: worker-config
+            image: taskvault-worker:local
+            imagePullPolicy: IfNotPresent
+            name: report-cronjob
+            resources:
+              limits:
+                cpu: 200m
+                memory: 256Mi
+              requests:
+                cpu: 50m
+                memory: 64Mi
+          restartPolicy: OnFailure
+          serviceAccountName: report-job-sa
+      ttlSecondsAfterFinished: 86400
+  schedule: '*/15 * * * *'
+  successfulJobsHistoryLimit: 1
+  suspend: true
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  labels:
+    app.kubernetes.io/component: db-migrator
+    app.kubernetes.io/managed-by: github-actions
+    app.kubernetes.io/name: taskvault
+    app.kubernetes.io/part-of: taskvault-demo
+    cnapp.demo/environment: demo-prod
+  name: db-migrator
+  namespace: demo-prod
+spec:
+  backoffLimit: 3
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: db-migrator
+        app.kubernetes.io/managed-by: github-actions
+        app.kubernetes.io/name: taskvault
+        app.kubernetes.io/part-of: taskvault-demo
+        cnapp.demo/environment: demo-prod
+    spec:
+      containers:
+      - command:
+        - node
+        - dist/src/db/migrate-and-seed.js
+        env:
+        - name: USE_SECRETS_MANAGER
+          value: "false"
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              key: DATABASE_URL
+              name: db-credentials
+        envFrom:
+        - configMapRef:
+            name: app-config
+        - configMapRef:
+            name: backend-config
+        image: taskvault-backend-migrator:local
+        imagePullPolicy: Never
+        name: db-migrator
+        resources:
+          limits:
+            cpu: 500m
+            memory: 512Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi
+      restartPolicy: OnFailure
+      serviceAccountName: db-migrator-sa
+  ttlSecondsAfterFinished: 86400
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    kubernetes.io/ingress.class: nginx
+  labels:
+    app.kubernetes.io/component: ingress
+    app.kubernetes.io/managed-by: github-actions
+    app.kubernetes.io/name: taskvault
+    app.kubernetes.io/part-of: taskvault-demo
+    cnapp.demo/environment: demo-prod
+    cnapp.demo/intentional-risk: "true"
+    cnapp.demo/risk-id: vuln-1
+  name: taskvault-public-ingress
+  namespace: demo-prod
+spec:
+  rules:
+  - http:
+      paths:
+      - backend:
+          service:
+            name: frontend-service
+            port:
+              number: 80
+        path: /
+        pathType: Prefix
+      - backend:
+          service:
+            name: backend-service
+            port:
+              number: 8080
+        path: /api
+        pathType: Prefix
+      - backend:
+          service:
+            name: backend-service
+            port:
+              number: 8080
+        path: /api/debug/status
+        pathType: Prefix
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: github-actions
+    app.kubernetes.io/name: taskvault
+    app.kubernetes.io/part-of: taskvault-demo
+    cnapp.demo/environment: demo-prod
+    cnapp.demo/intentional-risk: "true"
+    cnapp.demo/risk-id: vuln-7
+  name: allow-backend-to-rds
+  namespace: demo-prod
+spec:
+  egress:
+  - ports:
+    - port: 5432
+      protocol: TCP
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/component: backend-api
+  policyTypes:
+  - Egress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: github-actions
+    app.kubernetes.io/name: taskvault
+    app.kubernetes.io/part-of: taskvault-demo
+    cnapp.demo/environment: demo-prod
+    cnapp.demo/intentional-risk: "true"
+    cnapp.demo/risk-id: vuln-7
+  name: allow-backend-to-sqs
+  namespace: demo-prod
+spec:
+  egress:
+  - ports:
+    - port: 443
+      protocol: TCP
+    - port: 4566
+      protocol: TCP
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/component: backend-api
+  policyTypes:
+  - Egress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: github-actions
+    app.kubernetes.io/name: taskvault
+    app.kubernetes.io/part-of: taskvault-demo
+    cnapp.demo/environment: demo-prod
+    cnapp.demo/intentional-risk: "true"
+    cnapp.demo/risk-id: vuln-7
+  name: allow-frontend-to-backend
+  namespace: demo-prod
+spec:
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/component: frontend
+    ports:
+    - port: 8080
+      protocol: TCP
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/component: backend-api
+  policyTypes:
+  - Ingress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: github-actions
+    app.kubernetes.io/name: taskvault
+    app.kubernetes.io/part-of: taskvault-demo
+    cnapp.demo/environment: demo-prod
+    cnapp.demo/intentional-risk: "true"
+    cnapp.demo/risk-id: vuln-7
+  name: allow-worker-to-sqs
+  namespace: demo-prod
+spec:
+  egress:
+  - ports:
+    - port: 443
+      protocol: TCP
+    - port: 4566
+      protocol: TCP
+    - port: 5432
+      protocol: TCP
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/component: worker
+  policyTypes:
+  - Egress

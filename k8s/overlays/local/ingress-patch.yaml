@@ -1,0 +1,4 @@
+- op: replace
+  path: /metadata/annotations
+  value:
+    kubernetes.io/ingress.class: nginx

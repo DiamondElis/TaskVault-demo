@@ -1,0 +1,7 @@
+{
+  "vuln_id": "vuln-10",
+  "task": "T174",
+  "deploy_workflow": "/Users/elhanelias/Desktop/TaskVault-Demo/artifacts/sample/vuln-10-deploy-workflow-20260614t031120z.yaml",
+  "github_role_policy": "/Users/elhanelias/Desktop/TaskVault-Demo/artifacts/sample/vuln-10-github-role-policy-20260614t031120z.json",
+  "verified": true
+}

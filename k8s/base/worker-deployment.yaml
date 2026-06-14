@@ -1,0 +1,91 @@
+# vuln-5: privileged container + hostPath mount of node root (spec §4.2).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: worker
+  namespace: demo-prod
+  labels:
+    app.kubernetes.io/name: taskvault
+    app.kubernetes.io/component: worker
+    app.kubernetes.io/part-of: taskvault-demo
+    app.kubernetes.io/managed-by: github-actions
+    cnapp.demo/environment: demo-prod
+    cnapp.demo/intentional-risk: "true"
+    cnapp.demo/risk-id: vuln-5
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: taskvault
+      app.kubernetes.io/component: worker
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: taskvault
+        app.kubernetes.io/component: worker
+        app.kubernetes.io/part-of: taskvault-demo
+        app.kubernetes.io/managed-by: github-actions
+        cnapp.demo/environment: demo-prod
+        cnapp.demo/intentional-risk: "true"
+        cnapp.demo/risk-id: vuln-5
+    spec:
+      serviceAccountName: worker-sa
+      containers:
+        - name: worker
+          image: taskvault-worker
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8081
+          securityContext:
+            privileged: true
+          envFrom:
+            - configMapRef:
+                name: app-config
+            - configMapRef:
+                name: worker-config
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: db-credentials
+                  key: DATABASE_URL
+            - name: USE_SECRETS_MANAGER
+              value: "true"
+          livenessProbe:
+            httpGet:
+              path: /worker/healthz
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /worker/readyz
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          volumeMounts:
+            - name: worker-config-volume
+              mountPath: /etc/taskvault/worker
+              readOnly: true
+            - name: tmp
+              mountPath: /tmp
+            - name: host-root
+              mountPath: /host
+      volumes:
+        - name: worker-config-volume
+          configMap:
+            name: worker-config
+        - name: tmp
+          emptyDir: {}
+        - name: host-root
+          hostPath:
+            path: /
+            type: Directory

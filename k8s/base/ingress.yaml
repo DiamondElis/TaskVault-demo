@@ -1,0 +1,43 @@
+# vuln-1: internet-facing ALB with explicit unauth route /api/debug/status (spec §4.2).
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: taskvault-public-ingress
+  namespace: demo-prod
+  labels:
+    app.kubernetes.io/name: taskvault
+    app.kubernetes.io/component: ingress
+    app.kubernetes.io/part-of: taskvault-demo
+    app.kubernetes.io/managed-by: github-actions
+    cnapp.demo/environment: demo-prod
+    cnapp.demo/intentional-risk: "true"
+    cnapp.demo/risk-id: vuln-1
+  annotations:
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+spec:
+  rules:
+    - http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend-service
+                port:
+                  number: 80
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: backend-service
+                port:
+                  number: 8080
+          - path: /api/debug/status
+            pathType: Prefix
+            backend:
+              service:
+                name: backend-service
+                port:
+                  number: 8080

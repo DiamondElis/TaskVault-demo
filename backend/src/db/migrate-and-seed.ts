@@ -4,18 +4,29 @@
  * node-pg-migrate records applied revisions in `pgmigrations`, so repeated runs
  * only apply pending migrations.
  */
+import { resolveRuntimeSecrets } from '../aws/secrets.js';
+import { getConfig, loadConfig } from '../config.js';
+import { initPool } from './pool.js';
 import { runMigrationsUp } from './migrate.js';
-
-async function seedDemoData(): Promise<void> {
-  // Demo row seeding is implemented in scripts/seed-demo-data.ts (later milestone).
-}
+import { seedDemoData } from './seed-demo.js';
 
 async function main(): Promise<void> {
+  loadConfig();
+  if (getConfig().inCluster) {
+    await resolveRuntimeSecrets();
+  }
+  initPool(getConfig().databaseUrl);
+
   console.log('Running database migrations...');
   await runMigrationsUp();
   console.log('Migrations complete.');
 
-  console.log('Running demo seed (no-op until seed script is wired)...');
+  if (process.env.SKIP_DEMO_SEED === 'true') {
+    console.log('Skipping demo seed (SKIP_DEMO_SEED=true).');
+    return;
+  }
+
+  console.log('Running demo seed...');
   await seedDemoData();
   console.log('Database ready.');
 }

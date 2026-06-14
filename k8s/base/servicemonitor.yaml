@@ -1,0 +1,25 @@
+# T104 (optional): requires Prometheus Operator CRDs in the cluster.
+# Not included in k8s/kustomization.yaml by default — enable when Prometheus is installed.
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: taskvault-backend-metrics
+  namespace: demo-prod
+  labels:
+    app.kubernetes.io/name: taskvault
+    app.kubernetes.io/component: backend-api
+    app.kubernetes.io/part-of: taskvault-demo
+    app.kubernetes.io/managed-by: github-actions
+    cnapp.demo/environment: demo-prod
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: taskvault
+      app.kubernetes.io/component: backend-api
+  namespaceSelector:
+    matchNames:
+      - demo-prod
+  endpoints:
+    - port: metrics
+      path: /metrics
+      interval: 30s

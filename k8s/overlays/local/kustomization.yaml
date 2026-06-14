@@ -1,0 +1,36 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../base
+  - services-alias.yaml
+
+patches:
+  - path: ingress-patch.yaml
+    target:
+      group: networking.k8s.io
+      version: v1
+      kind: Ingress
+      name: taskvault-public-ingress
+  - path: config-patch.yaml
+  - path: secrets-patch.yaml
+  - path: serviceaccount-patch.yaml
+  - path: deployments-patch.yaml
+  - path: cronjob-patch.yaml
+  - path: jobs-patch.yaml
+  - path: netpol-localstack-patch.yaml
+  - path: report-job-delete.yaml
+
+images:
+  - name: taskvault-frontend
+    newName: taskvault-frontend
+    newTag: local
+  - name: taskvault-backend
+    newName: taskvault-backend
+    newTag: local
+  - name: taskvault-worker
+    newName: taskvault-worker
+    newTag: local
+  - name: taskvault-backend-migrator
+    newName: taskvault-backend-migrator
+    newTag: local

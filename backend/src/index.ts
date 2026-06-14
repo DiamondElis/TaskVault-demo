@@ -1,3 +1,4 @@
+import './node16-crypto-shim.js';
 import { createApp } from './app.js';
 import { resolveRuntimeSecrets } from './aws/secrets.js';
 import { getConfig, loadConfig } from './config.js';

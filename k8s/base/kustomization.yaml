@@ -1,0 +1,34 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: demo-prod
+
+resources:
+  - namespace.yaml
+  - serviceaccounts.yaml
+  - rbac.yaml
+  - secrets.fake.yaml
+  - configmaps.yaml
+  - frontend-deployment.yaml
+  - backend-deployment.yaml
+  - worker-deployment.yaml
+  - services.yaml
+  - ingress.yaml
+  - networkpolicies.yaml
+  - job-db-migrator.yaml
+  - job-report.yaml
+  - cronjob-report.yaml
+
+patches:
+  - path: pod-security-labels.yaml
+
+images:
+  - name: taskvault-frontend
+    newName: taskvault-frontend
+    newTag: local
+  - name: taskvault-backend
+    newName: taskvault-backend
+    newTag: local
+  - name: taskvault-worker
+    newName: taskvault-worker
+    newTag: local

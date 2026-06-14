@@ -11,7 +11,8 @@
     "test:watch": "vitest",
     "migrate:up": "tsx src/db/migrate-cli.ts up",
     "migrate:down": "tsx src/db/migrate-cli.ts down",
-    "db:migrate": "tsx src/db/migrate-and-seed.ts"
+    "db:migrate": "tsx src/db/migrate-and-seed.ts",
+    "db:seed": "tsx src/db/seed-only.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.826.0",

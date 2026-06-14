@@ -1,3 +1,15 @@
+x-app-aws-env: &app-aws-env
+  AWS_REGION: us-east-1
+  AWS_ACCESS_KEY_ID: test
+  AWS_SECRET_ACCESS_KEY: test
+  AWS_ENDPOINT: http://localstack:4566
+  S3_BUCKET: taskvault-user-files
+  REPORTS_S3_BUCKET: taskvault-reports
+  SQS_QUEUE_URL: http://localstack:4566/000000000000/taskvault-jobs
+
+x-app-db-env: &app-db-env
+  DATABASE_URL: postgres://demo:password@postgres:5432/taskvault
+
 services:
   postgres:
     image: postgres:16
@@ -20,7 +32,8 @@ services:
       start_period: 10s
 
   localstack:
-    image: localstack/localstack:latest
+    # Pinned: `latest` (2026.03+) requires LOCALSTACK_AUTH_TOKEN; 4.14 works without auth.
+    image: localstack/localstack:4.14
     container_name: taskvault-localstack
     environment:
       SERVICES: s3,sqs,secretsmanager
@@ -28,49 +41,142 @@ services:
       DEBUG: 0
     ports:
       - "4566:4566"
+    volumes:
+      - ./scripts/localstack-init:/etc/localstack/init/ready.d
+    networks:
+      - taskvault-local
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl -sf http://localhost:4566/_localstack/health | grep -qE '\"s3\": \"(available|running)\"'",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+
+  db-migrator:
+    image: taskvault-backend-migrator:local
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+      target: migrator
+    container_name: taskvault-db-migrator
+    environment:
+      <<: [*app-db-env, *app-aws-env]
+      DEMO_ADMIN_EMAIL: admin@taskvault.demo
+      DEMO_ADMIN_PASSWORD: password123
+    depends_on:
+      postgres:
+        condition: service_healthy
+      localstack:
+        condition: service_healthy
     networks:
       - taskvault-local
 
-  # App services — uncomment in M5 when Dockerfiles and source exist.
-  #
-  # backend:
-  #   build:
-  #     context: ./backend
-  #   container_name: taskvault-backend
-  #   env_file: .env
-  #   depends_on:
-  #     postgres:
-  #       condition: service_healthy
-  #     localstack:
-  #       condition: service_started
-  #   ports:
-  #     - "8080:8080"
-  #   networks:
-  #     - taskvault-local
-  #
-  # worker:
-  #   build:
-  #     context: ./worker
-  #   container_name: taskvault-worker
-  #   env_file: .env
-  #   depends_on:
-  #     postgres:
-  #       condition: service_healthy
-  #     localstack:
-  #       condition: service_started
-  #   networks:
-  #     - taskvault-local
-  #
-  # frontend:
-  #   build:
-  #     context: ./frontend
-  #   container_name: taskvault-frontend
-  #   depends_on:
-  #     - backend
-  #   ports:
-  #     - "3000:80"
-  #   networks:
-  #     - taskvault-local
+  backend:
+    image: taskvault-backend:local
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+      target: stage-1
+    container_name: taskvault-backend
+    environment:
+      <<: [*app-db-env, *app-aws-env]
+      NODE_ENV: production
+      PORT: 8080
+      LOG_LEVEL: info
+      BUILD_SHA: local
+      JWT_SECRET: demo-jwt-signing-secret-not-real
+      FEATURE_ADMIN_REPORTS: "true"
+      FEATURE_ADMIN_PREVIEW: "true"
+      FEATURE_K8S_SECRET_LIST: "false"
+      DEMO_ADMIN_EMAIL: admin@taskvault.demo
+      DEMO_ADMIN_PASSWORD: password123
+    depends_on:
+      postgres:
+        condition: service_healthy
+      localstack:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    networks:
+      - taskvault-local
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q -O - http://127.0.0.1:8080/api/readyz | grep -q '\"database\":true'",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  worker:
+    image: taskvault-worker:local
+    build:
+      context: .
+      dockerfile: worker/Dockerfile
+    container_name: taskvault-worker
+    environment:
+      <<: [*app-db-env, *app-aws-env]
+      NODE_ENV: production
+      WORKER_PORT: 8081
+      LOG_LEVEL: info
+      BUILD_SHA: local
+    depends_on:
+      postgres:
+        condition: service_healthy
+      localstack:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
+    ports:
+      - "8081:8081"
+    networks:
+      - taskvault-local
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q -O - http://127.0.0.1:8081/worker/readyz | grep -q '\"status\":\"ready\"'",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 25s
+
+  frontend:
+    image: taskvault-frontend:local
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    container_name: taskvault-frontend
+    environment:
+      API_BASE_URL: ""
+      WORKER_API_URL: ""
+      FEATURE_ADMIN_REPORTS: "true"
+    depends_on:
+      backend:
+        condition: service_healthy
+      worker:
+        condition: service_healthy
+    ports:
+      - "3000:8080"
+    networks:
+      - taskvault-local
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q -O - http://127.0.0.1:8080/health | grep -q '\"status\":\"ok\"'",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
 
 networks:
   taskvault-local:

@@ -1,0 +1,38 @@
+# LocalStack (4566) and compose Postgres (5432) use non-AWS ports on the kind network.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-backend-to-sqs
+  namespace: demo-prod
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/component: backend-api
+  policyTypes:
+    - Egress
+  egress:
+    - ports:
+        - protocol: TCP
+          port: 443
+        - protocol: TCP
+          port: 4566
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-worker-to-sqs
+  namespace: demo-prod
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/component: worker
+  policyTypes:
+    - Egress
+  egress:
+    - ports:
+        - protocol: TCP
+          port: 443
+        - protocol: TCP
+          port: 4566
+        - protocol: TCP
+          port: 5432

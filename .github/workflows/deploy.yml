@@ -1,0 +1,78 @@
+# vuln-10: intentionally weak deploy workflow (spec §5.4).
+# - permissions: write-all (over-broad GitHub token scope)
+# - third-party action pinned to @main (supply-chain risk)
+# - assumes taskvault-github-deploy-role with broad OIDC trust (any branch/ref)
+#
+# T183 — INTENTIONALLY ABSENT (demo supply-chain story):
+#   • No cosign/sigstore image signing step
+#   • No workflow dependency on security-scan.yml results (no scan-gate)
+# Remediation in production: pin actions by SHA, scope permissions per job,
+#   require security-scan + image signing before deploy, and narrow OIDC trust
+#   to environment/ref (e.g. refs/heads/main + environment:demo-prod).
+name: Deploy to EKS
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions: write-all
+
+env:
+  AWS_REGION: us-east-1
+  EKS_CLUSTER_NAME: taskvault-eks
+  K8S_NAMESPACE: demo-prod
+  IMAGE_TAG: ${{ github.sha }}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # vuln-10: unpinned third-party action on @main (not pinned to commit SHA).
+      - name: Third-party deploy shim (vuln-10)
+        uses: nick-fields/retry@main
+        with:
+          max_attempts: 1
+          timeout_seconds: 30
+          command: echo "taskvault deploy shim via unpinned @main action (vuln-10)"
+
+      - name: Configure AWS credentials (OIDC — broad trust, vuln-10)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_OIDC_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v4
+
+      - name: Deploy to EKS
+        env:
+          GITHUB_SHA: ${{ github.sha }}
+          ECR_IMAGE_TAG: ${{ env.IMAGE_TAG }}
+        run: |
+          chmod +x scripts/ci-deploy-eks.sh scripts/k8s-eks-deploy.sh scripts/cdk-outputs.sh
+          ./scripts/ci-deploy-eks.sh
+
+      - name: Verify running image SHA matches commit
+        run: |
+          set -euo pipefail
+          ACCOUNT="$(aws sts get-caller-identity --query Account --output text)"
+          REGISTRY="${ACCOUNT}.dkr.ecr.${AWS_REGION}.amazonaws.com"
+          EXPECTED="${REGISTRY}/taskvault-backend:${IMAGE_TAG}"
+          RUNNING="$(kubectl -n "${K8S_NAMESPACE}" get deploy backend-api \
+            -o jsonpath='{.spec.template.spec.containers[0].image}')"
+          echo "Expected: ${EXPECTED}"
+          echo "Running:  ${RUNNING}"
+          [[ "$RUNNING" == "$EXPECTED" ]] || {
+            echo "Image tag mismatch — deployment may still be rolling out"
+            kubectl -n "${K8S_NAMESPACE}" rollout status deployment/backend-api --timeout=120s
+            RUNNING="$(kubectl -n "${K8S_NAMESPACE}" get deploy backend-api \
+              -o jsonpath='{.spec.template.spec.containers[0].image}')"
+            [[ "$RUNNING" == "$EXPECTED" ]]
+          }
+          echo "✓ backend-api image matches commit SHA"
+
+      # No cosign signing step — intentional (T183).
+      # No needs: security-scan — intentional scan-gate absence (vuln-10).

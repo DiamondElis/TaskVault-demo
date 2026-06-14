@@ -1,0 +1,4 @@
+title = "TaskVault M11 verification — no allowlist (expect fake placeholders flagged)"
+
+[extend]
+useDefault = true

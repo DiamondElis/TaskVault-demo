@@ -29,6 +29,31 @@ export async function findById(id: string): Promise<JobRow | null> {
   return result.rows[0] ?? null;
 }
 
+export interface LatestJobByFile {
+  file_id: string;
+  job_id: string | null;
+  job_status: string | null;
+}
+
+export async function findLatestByFileIds(fileIds: string[]): Promise<Map<string, LatestJobByFile>> {
+  if (fileIds.length === 0) {
+    return new Map();
+  }
+
+  const result = await getPool().query<LatestJobByFile>(
+    `SELECT DISTINCT ON (file_id)
+       file_id,
+       id AS job_id,
+       status AS job_status
+     FROM jobs
+     WHERE file_id = ANY($1::uuid[])
+     ORDER BY file_id, created_at DESC`,
+    [fileIds],
+  );
+
+  return new Map(result.rows.map((row) => [row.file_id, row]));
+}
+
 export async function updateStatus(
   id: string,
   status: string,

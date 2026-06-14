@@ -5,8 +5,22 @@ import { sendJob } from '../aws/sqs.js';
 import { audit } from '../logger.js';
 import { requireAuth } from '../middleware/auth.js';
 import * as filesRepo from '../repositories/files.repo.js';
-import type { FileClassification } from '../repositories/files.repo.js';
+import type { FileClassification, FileRow } from '../repositories/files.repo.js';
 import * as jobsRepo from '../repositories/jobs.repo.js';
+
+function withJobStatus(
+  files: FileRow[],
+  jobs: Map<string, jobsRepo.LatestJobByFile>,
+): Array<FileRow & { latest_job_status: string | null; latest_job_id: string | null }> {
+  return files.map((file) => {
+    const latest = jobs.get(file.file_id);
+    return {
+      ...file,
+      latest_job_id: latest?.job_id ?? null,
+      latest_job_status: latest?.job_status ?? null,
+    };
+  });
+}
 
 const router = Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
@@ -73,7 +87,8 @@ router.get('/', async (req, res) => {
       ? await filesRepo.listAll()
       : await filesRepo.listByOwner(req.user!.id);
 
-  res.status(200).json(files);
+  const jobMap = await jobsRepo.findLatestByFileIds(files.map((f) => f.file_id));
+  res.status(200).json(withJobStatus(files, jobMap));
 });
 
 router.get('/:id', async (req, res) => {

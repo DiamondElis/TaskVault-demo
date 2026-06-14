@@ -61,7 +61,7 @@ export function loadConfig(): AppConfig {
     featureAdminReports: parseBool(process.env.FEATURE_ADMIN_REPORTS, true),
     featureAdminPreview: parseBool(process.env.FEATURE_ADMIN_PREVIEW, true),
     featureK8sSecretList: parseBool(process.env.FEATURE_K8S_SECRET_LIST, false),
-    inCluster: Boolean(process.env.KUBERNETES_SERVICE_HOST) || process.env.USE_SECRETS_MANAGER === 'true',
+    inCluster: process.env.USE_SECRETS_MANAGER === 'true',
     secretsManagerDbSecretId: process.env.SECRETS_MANAGER_DB_SECRET_ID ?? 'taskvault/demo/db',
     secretsManagerAppSecretId: process.env.SECRETS_MANAGER_APP_SECRET_ID ?? 'taskvault/demo/app',
   };

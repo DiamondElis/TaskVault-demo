@@ -1,0 +1,27 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: db-migrator
+  namespace: demo-prod
+spec:
+  template:
+    spec:
+      containers:
+        - name: db-migrator
+          image: taskvault-backend-migrator
+          imagePullPolicy: Never
+          env:
+            - name: USE_SECRETS_MANAGER
+              value: "false"
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: report-job
+  namespace: demo-prod
+spec:
+  template:
+    spec:
+      containers:
+        - name: report-job
+          imagePullPolicy: Never
