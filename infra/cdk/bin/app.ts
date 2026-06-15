@@ -9,11 +9,12 @@ import { NetworkStack } from '../lib/network-stack';
 import { ObservabilityStack } from '../lib/observability-stack';
 import { RdsStack } from '../lib/rds-stack';
 import { StorageStack } from '../lib/storage-stack';
-import { applyTaskvaultTags, taskvaultEnvironment } from '../lib/taskvault-env';
+import { applyTaskvaultTags, taskvaultEnvironment, TASKVAULT_CLUSTER_NAME } from '../lib/taskvault-env';
 
 const app = new cdk.App();
 const env = taskvaultEnvironment(app);
 const githubOrg: string = app.node.tryGetContext('githubOrg') ?? 'your-org';
+const githubRepo: string = app.node.tryGetContext('githubRepo') ?? 'TaskVault-demo';
 
 const network = new NetworkStack(app, 'TaskvaultNetwork', {
   env,
@@ -53,6 +54,7 @@ const eks = new EksStack(app, 'TaskvaultEks', {
   description: 'TaskVault EKS cluster, node group, ALB controller, EBS CSI',
   vpc: network.vpc,
   nodeSecurityGroup: network.nodeSecurityGroup,
+  nodeInstanceType: app.node.tryGetContext('nodeInstanceType') ?? 't3.small',
 });
 eks.addDependency(network);
 
@@ -74,6 +76,7 @@ const githubOidc = new GitHubOidcRoleStack(app, 'TaskvaultGithubOidc', {
   env,
   description: 'GitHub Actions OIDC deploy role (vuln-10)',
   githubOrg,
+  githubRepo,
   clusterArn: eks.cluster.clusterArn,
 });
 githubOidc.addDependency(ecr);
@@ -83,13 +86,13 @@ const observability = new ObservabilityStack(app, 'TaskvaultObservability', {
   env,
   description: 'TaskVault CloudWatch logs, CloudTrail, Inspector, GuardDuty, Security Hub',
   userFilesBucket: storage.userFilesBucket,
-  eksClusterName: eks.cluster.clusterName,
+  eksClusterName: TASKVAULT_CLUSTER_NAME,
   enableGuardDuty: app.node.tryGetContext('enableGuardDuty') ?? true,
   enableSecurityHub: app.node.tryGetContext('enableSecurityHub') ?? true,
 });
 observability.addDependency(storage);
 observability.addDependency(ecr);
-observability.addDependency(eks);
+// EKS cluster name is only used for tags — do not pull TaskvaultEks into foundation deploys.
 
 for (const stack of [network, kms, ecr, storage, rds, eks, iam, githubOidc, observability]) {
   applyTaskvaultTags(stack);

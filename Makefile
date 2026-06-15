@@ -1,4 +1,4 @@
-.PHONY: help local-up local-down docker-build scan-local cdk-synth cdk-deploy cdk-deploy-foundation \
+.PHONY: help local-up local-down docker-build scan-local aws-setup-deploy cdk-synth cdk-deploy cdk-deploy-foundation \
 	cdk-deploy-eks cdk-deploy-iam ecr-push-bootstrap eks-verify eks-verify-alb eks-verify-logs \
 	eks-run-db-migrator eks-seed-demo smoke-eks eks-verify-irsa-s3 eks-verify-worker-flow \
 	eks-verify-audit-coverage eks-verify-report-cronjob eks-deploy-seed-verify \
@@ -22,6 +22,7 @@ help:
 	@echo "  verify-vuln-matrix  Verify all ten intentional risks"
 	@echo "  compile-vuln-matrix  T175: compile evidence table only"
 	@echo "  ci-verify-pipeline  T184: verify CI build/deploy + scan artifacts"
+	@echo "  aws-setup-deploy Create taskvault-deploy IAM user + CLI profile (admin creds)"
 	@echo "  cdk-synth        Synthesize CDK stacks"
 	@echo "  cdk-deploy       Deploy all CDK stacks (foundation + EKS + IAM)"
 	@echo "  cdk-deploy-foundation  Deploy network/KMS/ECR/storage/RDS/observability"
@@ -82,6 +83,10 @@ scan-local:
 	./scripts/verify-vuln-matrix.sh
 
 CDK_DIR := infra/cdk
+
+aws-setup-deploy:
+	chmod +x scripts/aws-create-deploy-user.sh
+	./scripts/aws-create-deploy-user.sh
 
 cdk-synth:
 	cd $(CDK_DIR) && npm install && npm run build

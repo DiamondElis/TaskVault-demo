@@ -59,7 +59,7 @@ export class NetworkStack extends cdk.Stack {
       vpc: this.vpc,
       securityGroupName: 'taskvault-node-sg',
       description: broadNodeEgress
-        ? 'EKS worker nodes — broad egress 0.0.0.0/0 (optional vuln-7 AWS layer)'
+        ? 'EKS worker nodes - broad egress 0.0.0.0/0 (optional vuln-7 AWS layer)'
         : 'EKS worker nodes',
       allowAllOutbound: broadNodeEgress,
     });
@@ -72,7 +72,7 @@ export class NetworkStack extends cdk.Stack {
     this.rdsSecurityGroup = new ec2.SecurityGroup(this, 'TaskvaultRdsSg', {
       vpc: this.vpc,
       securityGroupName: 'taskvault-rds-sg',
-      description: 'Postgres — nodes only',
+      description: 'Postgres - nodes only',
       allowAllOutbound: false,
     });
     this.rdsSecurityGroup.addIngressRule(

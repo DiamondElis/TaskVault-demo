@@ -17,7 +17,7 @@ make cdk-deploy-foundation
 # T147 — EKS cluster + kubeconfig
 make cdk-deploy-eks
 
-# T148 / T150 — nodes, add-ons, OIDC, ALB controller
+# T148 / T150 — nodes, add-ons, OIDC, ALB controller (Helm post-deploy)
 make eks-verify
 
 # T149 — IRSA roles + GitHub OIDC
@@ -35,6 +35,33 @@ make eks-verify-logs
 ```
 
 Or run all CDK phases: `make cdk-deploy` (foundation → EKS → IAM).
+
+## EKS deploy reliability
+
+`TaskvaultEks` intentionally **does not** install the ALB controller via CloudFormation/Helm custom resources. That pattern caused full-stack rollbacks when a deploy was interrupted (`another operation (install/upgrade/rollback) is in progress`).
+
+Instead:
+
+1. CDK creates cluster + node group + IRSA service account + managed addons
+2. `make cdk-deploy-eks` waits for Ready nodes, then runs `scripts/eks-install-alb-controller.sh` (retriable Helm)
+
+Preflight (`scripts/cdk-eks-preflight.sh`) blocks concurrent deploys and failed stack states.
+
+**Do not** run `make cdk-deploy` while `TaskvaultEks` is `CREATE_IN_PROGRESS`. Wait for `CREATE_COMPLETE` or use `make cdk-deploy-eks` alone after foundation is up.
+
+**Free-Tier-only accounts:** set `nodeInstanceType` in `infra/cdk/cdk.json` to `t3.micro` (default). `t3.medium` fails with `AsgInstanceLaunchFailures` / not Free Tier eligible.
+
+### Recover from `ROLLBACK_COMPLETE`
+
+```bash
+AWS_PROFILE=taskvault-deploy aws cloudformation wait stack-rollback-complete \
+  --stack-name TaskvaultEks --region us-east-1
+AWS_PROFILE=taskvault-deploy aws cloudformation delete-stack \
+  --stack-name TaskvaultEks --region us-east-1
+# If cluster still exists:
+AWS_PROFILE=taskvault-deploy aws eks delete-cluster --name taskvault-eks --region us-east-1
+make cdk-deploy-eks
+```
 
 ## Stack outputs used
 

@@ -4,6 +4,8 @@ import { Construct } from 'constructs';
 
 export interface GitHubOidcRoleStackProps extends cdk.StackProps {
   readonly githubOrg: string;
+  /** Exact GitHub repo name (case-sensitive) for OIDC sub claim. */
+  readonly githubRepo: string;
   readonly clusterArn: string;
 }
 
@@ -23,13 +25,13 @@ export class GitHubOidcRoleStack extends cdk.Stack {
       assumedBy: new iam.WebIdentityPrincipal(provider.openIdConnectProviderArn, {
         StringLike: {
           // vuln-10: intentionally broad — not pinned to ref or environment.
-          'token.actions.githubusercontent.com:sub': `repo:${props.githubOrg}/taskvault-demo:*`,
+          'token.actions.githubusercontent.com:sub': `repo:${props.githubOrg}/${props.githubRepo}:*`,
         },
         StringEquals: {
           'token.actions.githubusercontent.com:aud': 'sts.amazonaws.com',
         },
       }),
-      description: 'GitHub Actions deploy role (vuln-10 — over-privileged)',
+      description: 'GitHub Actions deploy role (vuln-10 - over-privileged)',
     });
     cdk.Tags.of(this.deployRole).add('cnapp.demo/intentional-risk', 'true');
     cdk.Tags.of(this.deployRole).add('cnapp.demo/risk-id', 'vuln-10');

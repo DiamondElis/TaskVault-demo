@@ -3,11 +3,13 @@
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# shellcheck source=scripts/lib/taskvault-aws.sh
+source "$REPO_ROOT/scripts/lib/taskvault-aws.sh"
 # shellcheck source=scripts/cdk-outputs.sh
 source "$REPO_ROOT/scripts/cdk-outputs.sh"
 
 CLUSTER_NAME="${EKS_CLUSTER_NAME:-taskvault-eks}"
-REGION="${AWS_REGION:-us-east-1}"
+NODEGROUP_NAME="${EKS_NODEGROUP_NAME:-taskvault-ng}"
 NAMESPACE_INGRESS="${INGRESS_NAMESPACE:-ingress-nginx}"
 EVIDENCE_DIR="${EVIDENCE_DIR:-$REPO_ROOT/artifacts/sample}"
 STAMP="$(date -u +%Y%m%dT%H%M%SZ | tr '[:upper:]' '[:lower:]')"
@@ -26,33 +28,42 @@ log() {
   echo "=== $* ==="
 }
 
+taskvault_eks_update_kubeconfig "$CLUSTER_NAME" >/dev/null
+echo "AWS profile: ${AWS_PROFILE}  region: ${AWS_REGION}  cluster: ${CLUSTER_NAME}"
+
 log "T148 — Nodes"
-kubectl get nodes -o wide
-not_ready="$(kubectl get nodes --no-headers 2>/dev/null | awk '$2 != "Ready" {c++} END {print c+0}')"
-if [[ "$not_ready" -gt 0 ]]; then
-  fail "${not_ready} node(s) not Ready"
+kubectl get nodes -l "eks.amazonaws.com/nodegroup=${NODEGROUP_NAME}" -o wide
+DESIRED="$(taskvault_aws eks describe-nodegroup \
+  --cluster-name "$CLUSTER_NAME" \
+  --nodegroup-name "$NODEGROUP_NAME" \
+  --query 'nodegroup.scalingConfig.desiredSize' \
+  --output text)"
+total="$(kubectl get nodes -l "eks.amazonaws.com/nodegroup=${NODEGROUP_NAME}" --no-headers 2>/dev/null | wc -l | tr -d ' ')"
+ready="$(kubectl get nodes -l "eks.amazonaws.com/nodegroup=${NODEGROUP_NAME}" --no-headers 2>/dev/null | awk '$2=="Ready"{c++} END{print c+0}')"
+not_ready="$(kubectl get nodes -l "eks.amazonaws.com/nodegroup=${NODEGROUP_NAME}" --no-headers 2>/dev/null | awk '$2!="Ready"{c++} END{print c+0}')"
+echo "Node group ${NODEGROUP_NAME}: ${ready}/${DESIRED} Ready, ${total} total, ${not_ready} NotReady"
+if [[ "$ready" -lt "$DESIRED" || "$total" -ne "$DESIRED" || "$not_ready" -gt 0 ]]; then
+  fail "node group not stable (want ${DESIRED} Ready, got ${ready}/${total}, ${not_ready} NotReady)"
 fi
-echo "✓ all nodes Ready"
+echo "✓ all ${DESIRED} node(s) Ready"
 
 log "T148 — EBS CSI add-on"
-aws eks describe-addon \
+taskvault_aws eks describe-addon \
   --cluster-name "$CLUSTER_NAME" \
   --addon-name aws-ebs-csi-driver \
-  --region "$REGION" \
   --query 'addon.status' --output text
 
 log "T148 — Node group"
-aws eks describe-nodegroup \
+taskvault_aws eks describe-nodegroup \
   --cluster-name "$CLUSTER_NAME" \
-  --nodegroup-name taskvault-ng \
-  --region "$REGION" \
+  --nodegroup-name "$NODEGROUP_NAME" \
   --query 'nodegroup.{status:status,desired:scalingConfig.desiredSize}' \
   --output table
 
 log "T148 — OIDC provider"
 export_value OIDC_ISSUER TaskvaultEks ClusterOidcIssuer
 ACCOUNT="$(account_id)"
-OIDC_PROVIDERS="$(aws iam list-open-id-connect-providers --query 'OpenIDConnectProviderList[].Arn' --output text)"
+OIDC_PROVIDERS="$(taskvault_aws iam list-open-id-connect-providers --query 'OpenIDConnectProviderList[].Arn' --output text)"
 echo "Cluster issuer: ${OIDC_ISSUER}"
 echo "IAM OIDC providers: ${OIDC_PROVIDERS}"
 if ! echo "$OIDC_PROVIDERS" | grep -q "$ACCOUNT"; then
@@ -72,8 +83,7 @@ kubectl logs -n kube-system "$ALB_POD" --tail=30
 echo "✓ ALB controller pod ready"
 
 log "T150 — Subnet discovery tags (T122)"
-aws ec2 describe-subnets \
-  --region "$REGION" \
+taskvault_aws ec2 describe-subnets \
   --filters "Name=tag:kubernetes.io/cluster/${CLUSTER_NAME},Values=shared" \
   --query 'Subnets[*].{SubnetId:SubnetId,AZ:AvailabilityZone,Public:MapPublicIpOnLaunch,ElbRole:Tags[?Key==`kubernetes.io/role/elb`].Value|[0],InternalElb:Tags[?Key==`kubernetes.io/role/internal-elb`].Value|[0]}' \
   --output table
