@@ -47,6 +47,25 @@ export class IamStack extends cdk.Stack {
       ),
       description: 'IRSA role for backend-api (vuln-2, vuln-6)',
     });
+    const migratorTrust = new CfnJson(this, 'MigratorSaTrustCondition', {
+      value: {
+        [`${props.cluster.clusterOpenIdConnectIssuer}:aud`]: 'sts.amazonaws.com',
+        [`${props.cluster.clusterOpenIdConnectIssuer}:sub`]: `system:serviceaccount:${TASKVAULT_NAMESPACE}:db-migrator-sa`,
+      },
+    });
+    this.backendRole.assumeRolePolicy?.addStatements(
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        principals: [
+          new iam.FederatedPrincipal(
+            oidcProvider.openIdConnectProviderArn,
+            { StringEquals: migratorTrust },
+            'sts:AssumeRoleWithWebIdentity',
+          ),
+        ],
+        actions: ['sts:AssumeRoleWithWebIdentity'],
+      }),
+    );
     cdk.Tags.of(this.backendRole).add('cnapp.demo/intentional-risk', 'true');
     cdk.Tags.of(this.backendRole).add('cnapp.demo/risk-id', 'vuln-2');
 
@@ -94,6 +113,18 @@ export class IamStack extends cdk.Stack {
     props.jobsQueue.grantConsumeMessages(this.workerRole);
     props.userFilesBucket.grantReadWrite(this.workerRole, 'uploads/*');
     props.reportsBucket.grantReadWrite(this.workerRole, 'reports/*');
+    this.workerRole.addToPolicy(
+      new iam.PolicyStatement({
+        sid: 'SecretsManagerReadForInClusterConfig',
+        effect: iam.Effect.ALLOW,
+        actions: ['secretsmanager:GetSecretValue'],
+        resources: [
+          props.appSecret.secretArn,
+          props.dbSecret.secretArn,
+          `arn:aws:secretsmanager:${cdk.Stack.of(this).region}:${cdk.Stack.of(this).account}:secret:taskvault/demo/*`,
+        ],
+      }),
+    );
 
     new cdk.CfnOutput(this, 'BackendRoleArn', {
       value: this.backendRole.roleArn,

@@ -182,7 +182,10 @@ for i, row in enumerate(rows, start=1):
 header += "\n"
 
 existing = docs_md.read_text() if docs_md.exists() else ""
-if "## vuln-8 —" in existing:
+if "## Risk register (auditor-facing)" in existing:
+    narrative = existing.split("## Risk register (auditor-facing)", 1)[1]
+    docs_md.write_text(header + "\n## Risk register (auditor-facing)" + narrative)
+elif "## vuln-8 —" in existing:
     narrative = existing.split("## vuln-8 —", 1)[1]
     docs_md.write_text(header + "\n## vuln-8 —" + narrative)
 else:

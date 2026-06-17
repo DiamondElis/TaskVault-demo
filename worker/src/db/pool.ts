@@ -8,7 +8,12 @@ export function initPool(databaseUrl?: string): pg.Pool {
     return pool;
   }
 
-  pool = new pg.Pool({ connectionString: databaseUrl ?? getConfig().databaseUrl });
+  const url = databaseUrl ?? getConfig().databaseUrl;
+  const isRds = url.includes('.rds.') || url.includes('amazonaws.com');
+  pool = new pg.Pool({
+    connectionString: url,
+    ...(isRds ? { ssl: { rejectUnauthorized: false } } : {}),
+  });
   return pool;
 }
 

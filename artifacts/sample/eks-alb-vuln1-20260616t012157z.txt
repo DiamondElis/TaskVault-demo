@@ -1,0 +1,15 @@
+=== T155 — ALB + vuln-1 public reachability ===
+NAME                       CLASS    HOSTS   ADDRESS                                                                   PORTS   AGE
+taskvault-public-ingress   <none>   *       k8s-demoprod-taskvaul-6f35f9480b-1007434742.us-east-1.elb.amazonaws.com   80      18h
+ALB hostname: k8s-demoprod-taskvaul-6f35f9480b-1007434742.us-east-1.elb.amazonaws.com
+ALB scheme: internet-facing
+Waiting for ALB to accept traffic...
+
+--- curl http://k8s-demoprod-taskvaul-6f35f9480b-1007434742.us-east-1.elb.amazonaws.com/api/healthz ---
+{"status":"ok"}
+
+--- curl http://k8s-demoprod-taskvaul-6f35f9480b-1007434742.us-east-1.elb.amazonaws.com/api/debug/status (vuln-1 unauth) ---
+{"service":"backend-api","buildSha":"k8s-demo","region":"us-east-1","bucket":"taskvault-user-files"}
+
+✓ vuln-1 verified: internet-facing ALB exposes unauthenticated /api/debug/status
+Evidence saved to: /Users/elhanelias/Desktop/TaskVault-Demo/artifacts/sample/eks-alb-vuln1-20260616t012157z.txt

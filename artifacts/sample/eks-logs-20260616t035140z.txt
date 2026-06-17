@@ -1,0 +1,32 @@
+=== T156 — CloudWatch log flow ===
+--- /taskvault/backend ---
+✓ log group exists
+--- /taskvault/worker ---
+✓ log group exists
+--- /taskvault/frontend ---
+✓ log group exists
+
+Generating traffic for audit log lines...
+Waiting for log delivery (Fluent Bit / Container Insights)...
+--- recent events in /taskvault/backend ---
+(no events yet)
+--- recent events in /taskvault/worker ---
+(no events yet)
+--- recent events in /taskvault/frontend ---
+(no events yet)
+--- recent events in /aws/containerinsights/taskvault-eks/application ---
+(no events yet)
+
+--- kubectl logs sample (backend) ---
+{"user_id":null,"request_id":"377e5070-8abc-4d31-b9eb-b556b7c0a583","email":"admin@taskvault.demo","service":"backend-api","event_type":"login_failure","s3_bucket":null,"s3_key":null,"timestamp":"2026-06-16T03:30:17.943Z"}
+{"user_id":null,"request_id":"f6b805ee-ed9d-49e1-876e-b6a391b24c92","email":"admin@taskvault.demo","service":"backend-api","event_type":"login_failure","s3_bucket":null,"s3_key":null,"timestamp":"2026-06-16T03:45:01.973Z"}
+{"user_id":null,"request_id":"47d21b9e-a6e1-4105-85b2-780f411a3608","email":"admin@taskvault.demo","service":"backend-api","event_type":"login_failure","s3_bucket":null,"s3_key":null,"timestamp":"2026-06-16T03:45:04.570Z"}
+{"user_id":null,"request_id":"229fbcd2-d114-4299-ba02-ff65e84735fc","email":"admin@taskvault.demo","service":"backend-api","event_type":"login_failure","s3_bucket":null,"s3_key":null,"timestamp":"2026-06-16T03:45:18.940Z"}
+{"user_id":null,"request_id":"85c7e358-cdf3-4148-b057-58f830807ba2","email":"admin@taskvault.demo","service":"backend-api","event_type":"login_failure","s3_bucket":null,"s3_key":null,"timestamp":"2026-06-16T03:49:03.337Z"}
+{"user_id":null,"request_id":"1daf7067-c3fa-4d27-aba9-d4a75d4d2cc7","email":"admin@taskvault.demo","service":"backend-api","event_type":"login_failure","s3_bucket":null,"s3_key":null,"timestamp":"2026-06-16T00:30:17.942Z"}
+{"user_id":null,"request_id":"081629f3-4e32-45ac-9f28-c810c0028a5b","email":"admin@taskvault.demo","service":"backend-api","event_type":"login_failure","s3_bucket":null,"s3_key":null,"timestamp":"2026-06-16T00:45:02.156Z"}
+{"user_id":null,"request_id":"e6fd94da-d5ca-42c4-8f59-6fcc6bb6f045","email":"admin@taskvault.demo","service":"backend-api","event_type":"login_failure","s3_bucket":null,"s3_key":null,"timestamp":"2026-06-16T00:45:04.271Z"}
+
+WARN: no CloudWatch events yet — verify amazon-cloudwatch-observability add-on pods:
+
+Log verification complete. Evidence: /Users/elhanelias/Desktop/TaskVault-Demo/artifacts/sample/eks-logs-20260616t035140z.txt

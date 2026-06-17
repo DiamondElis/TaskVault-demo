@@ -1,0 +1,4 @@
+=== T161 — IRSA S3 evidence (vuln-2 / vuln-6) ===
+Backend role: arn:aws:iam::840315891380:role/taskvault-backend-role
+CloudTrail lookback from: 2026-06-16T00:22:37Z
+FAIL: no AssumeRoleWithWebIdentity events for taskvault-backend-role

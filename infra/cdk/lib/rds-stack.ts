@@ -43,9 +43,12 @@ export class RdsStack extends cdk.Stack {
       vpcSubnets: { subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS },
       securityGroups: [props.rdsSecurityGroup],
       credentials: rds.Credentials.fromSecret(this.dbSecret),
+      // Omit databaseName: adding it to an existing custom-named instance forces replacement,
+      // which CloudFormation blocks. DB name is in the Secrets Manager template (dbname: taskvault).
       allocatedStorage: 20,
       storageEncrypted: true,
       storageEncryptionKey: props.kmsKey,
+      copyTagsToSnapshot: true,
       publiclyAccessible: false,
       multiAz: false,
       deletionProtection: false,

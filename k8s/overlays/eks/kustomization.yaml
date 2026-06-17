@@ -3,6 +3,7 @@ kind: Kustomization
 
 resources:
   - ../../base
+  - services-alias.yaml
 
 patches:
   - path: serviceaccount-irsa-patch.yaml

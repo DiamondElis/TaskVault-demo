@@ -1,0 +1,88 @@
+{
+  "schema_version": "1.0",
+  "collected_at": "2026-06-17T05:15:41.943581+00:00",
+  "repository": {
+    "root": "/Users/elhanelias/Desktop/TaskVault-Demo",
+    "remote_origin": "git@github.com:DiamondElis/TaskVault-demo.git",
+    "branch": "main",
+    "commit": "55ec3d51d812718644d11ae76bb8fca7e389b06b"
+  },
+  "workflows": [
+    {
+      "path": ".github/workflows/build.yml",
+      "name": "build",
+      "permissions_write_all": false,
+      "unpinned_main_action": false,
+      "needs_security_scan": false,
+      "cosign": false
+    },
+    {
+      "path": ".github/workflows/deploy.yml",
+      "name": "deploy",
+      "permissions_write_all": true,
+      "unpinned_main_action": true,
+      "needs_security_scan": true,
+      "cosign": true
+    },
+    {
+      "path": ".github/workflows/security-scan.yml",
+      "name": "security-scan",
+      "permissions_write_all": false,
+      "unpinned_main_action": false,
+      "needs_security_scan": false,
+      "cosign": false
+    }
+  ],
+  "dockerfiles": [
+    "backend/Dockerfile",
+    "frontend/Dockerfile",
+    "infra/cdk/node_modules/@aws-cdk/asset-awscli-v1/layer/Dockerfile",
+    "infra/cdk/node_modules/@aws-cdk/asset-node-proxy-agent-v6/layer/Dockerfile",
+    "infra/cdk/node_modules/@aws-cdk/lambda-layer-kubectl-v31/layer/Dockerfile",
+    "infra/cdk/node_modules/aws-cdk-lib/aws-lambda-nodejs/lib/Dockerfile",
+    "infra/cdk/node_modules/constructs/Dockerfile",
+    "worker/Dockerfile"
+  ],
+  "k8s_manifests": [
+    "k8s/base/backend-deployment.yaml",
+    "k8s/base/configmaps.yaml",
+    "k8s/base/cronjob-report.yaml",
+    "k8s/base/frontend-deployment.yaml",
+    "k8s/base/ingress.yaml",
+    "k8s/base/job-db-migrator.yaml",
+    "k8s/base/job-report.yaml",
+    "k8s/base/kustomization.yaml",
+    "k8s/base/namespace.yaml",
+    "k8s/base/networkpolicies.yaml",
+    "k8s/base/pod-security-labels.yaml",
+    "k8s/base/rbac.yaml",
+    "k8s/base/secrets.fake.yaml",
+    "k8s/base/serviceaccounts.yaml",
+    "k8s/base/servicemonitor.yaml",
+    "k8s/base/services.yaml",
+    "k8s/base/worker-deployment.yaml",
+    "k8s/overlays/eks/config-patch.yaml",
+    "k8s/overlays/eks/cronjob-patch.yaml",
+    "k8s/overlays/eks/deployments-patch.yaml",
+    "k8s/overlays/eks/jobs-patch.yaml",
+    "k8s/overlays/eks/kustomization.yaml",
+    "k8s/overlays/eks/serviceaccount-irsa-patch.yaml",
+    "k8s/overlays/eks/services-alias.yaml",
+    "k8s/overlays/local/config-patch.yaml",
+    "k8s/overlays/local/cronjob-patch.yaml",
+    "k8s/overlays/local/deployments-patch.yaml",
+    "k8s/overlays/local/ingress-patch.yaml",
+    "k8s/overlays/local/jobs-patch.yaml",
+    "k8s/overlays/local/kustomization.yaml",
+    "k8s/overlays/local/netpol-localstack-patch.yaml",
+    "k8s/overlays/local/report-job-delete.yaml",
+    "k8s/overlays/local/secrets-patch.yaml",
+    "k8s/overlays/local/serviceaccount-patch.yaml",
+    "k8s/overlays/local/services-alias.yaml"
+  ],
+  "env_example": ".env.example",
+  "fake_secret_fixtures": [
+    ".env.example",
+    "backend/test/fixtures/fake-secrets.txt"
+  ]
+}

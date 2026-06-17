@@ -1,0 +1,96 @@
+{
+  "schema_version": "1.0",
+  "description": "Acceptance oracle — CNAPP findings mapped to intentional demo vulns (spec §7–§8)",
+  "findings": [
+    {
+      "id": "finding-vuln-1-alb-exposure",
+      "vuln_id": "vuln-1",
+      "title": "Internet-facing ALB without WAF",
+      "severity": "high",
+      "source": "aws",
+      "signals": ["internet-facing ALB", "taskvault-public-ingress", "no WAF"],
+      "node_ids": ["aws-alb-public", "k8s-ingress-taskvault-public"]
+    },
+    {
+      "id": "finding-vuln-2-s3-star",
+      "vuln_id": "vuln-2",
+      "title": "Backend IAM role grants s3:* on taskvault-*",
+      "severity": "medium",
+      "source": "aws",
+      "signals": ["s3:*", "taskvault-*", "taskvault-backend-role"],
+      "node_ids": ["aws-iam-backend-role", "aws-s3-user-files"]
+    },
+    {
+      "id": "finding-vuln-3-rbac-secrets",
+      "vuln_id": "vuln-3",
+      "title": "backend-sa can list/get Secrets in demo-prod",
+      "severity": "medium",
+      "source": "kubernetes",
+      "signals": ["backend-secret-reader", "secrets list", "backend-sa"],
+      "node_ids": ["k8s-sa-backend"]
+    },
+    {
+      "id": "finding-vuln-4-fake-secrets",
+      "vuln_id": "vuln-4",
+      "title": "Fake credentials in repo and image layer",
+      "severity": "medium",
+      "source": "scanner",
+      "signals": ["AKIAFAKEDEMO123456", "sk_test_fake_demo_value", "gitleaks", "trivy secret"],
+      "node_ids": ["github-repo-taskvault", "container-image-backend"]
+    },
+    {
+      "id": "finding-vuln-5-privileged-worker",
+      "vuln_id": "vuln-5",
+      "title": "Worker pod runs privileged with hostPath mount",
+      "severity": "high",
+      "source": "kubernetes",
+      "signals": ["privileged: true", "hostPath", "worker deployment"],
+      "node_ids": ["k8s-pod-worker"]
+    },
+    {
+      "id": "finding-vuln-6-irsa-secretsmanager",
+      "vuln_id": "vuln-6",
+      "title": "Backend IRSA can read Secrets Manager demo paths",
+      "severity": "medium",
+      "source": "aws",
+      "signals": ["secretsmanager:GetSecretValue", "taskvault/demo/*", "IRSA"],
+      "node_ids": ["k8s-sa-backend", "aws-iam-backend-role"]
+    },
+    {
+      "id": "finding-vuln-7-no-default-deny",
+      "vuln_id": "vuln-7",
+      "title": "No default-deny NetworkPolicies in demo-prod",
+      "severity": "medium",
+      "source": "kubernetes",
+      "signals": ["missing default-deny-ingress", "missing default-deny-egress", "allow-only policies"],
+      "node_ids": ["k8s-pod-backend-api", "k8s-pod-worker"]
+    },
+    {
+      "id": "finding-vuln-8-vulnerable-root-image",
+      "vuln_id": "vuln-8",
+      "title": "Vulnerable root backend container (node:16-alpine + CVEs)",
+      "severity": "medium",
+      "source": "scanner",
+      "signals": ["node:16-alpine", "lodash 4.17.15", "runAsUser: 0", "no resource limits", "trivy CVE"],
+      "node_ids": ["container-image-backend", "k8s-pod-backend-api"]
+    },
+    {
+      "id": "finding-vuln-9-s3-no-versioning",
+      "vuln_id": "vuln-9",
+      "title": "S3 bucket versioning disabled on sensitive data store",
+      "severity": "medium",
+      "source": "aws",
+      "signals": ["versioning disabled", "CKV_AWS_21", "uploads/sensitive/"],
+      "node_ids": ["aws-s3-user-files", "aws-s3-sensitive-prefix"]
+    },
+    {
+      "id": "finding-vuln-10-cicd-supply-chain",
+      "vuln_id": "vuln-10",
+      "title": "CI/CD over-privileged with no scan gate or image signing",
+      "severity": "high",
+      "source": "github",
+      "signals": ["permissions: write-all", "nick-fields/retry@main", "no cosign", "broad OIDC trust"],
+      "node_ids": ["github-workflow-deploy", "aws-iam-github-oidc-role"]
+    }
+  ]
+}

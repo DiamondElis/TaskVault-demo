@@ -22,7 +22,7 @@ taskvault-demo/
   infra/cdk/          AWS CDK stacks (network, storage, EKS, IAM, observability)
   k8s/                base/ + overlays/local|eks (Kustomize)
   scripts/            kind-up, k8s-local-up, smoke-local.sh, seed-demo-data.ts, …
-  docs/               architecture, intentional-risks, kind-local, test-plan, …
+  docs/               architecture, intentional-risks, kind-local, test-plan, runbook, cleanup, …
   artifacts/sample/   kubescape + k8s validation evidence (M7); expected-*.json (M13)
 ```
 
@@ -88,6 +88,14 @@ make compile-vuln-matrix   # T175: assemble §7 matrix + update docs/intentional
 
 Or a single vuln: `RUN_VULN=3 make verify-vuln-matrix`
 
+### Evidence export (M13)
+
+```bash
+make export-evidence   # inventories, scanner outputs, graph oracle validation
+```
+
+See `docs/graph-contract.md` and `artifacts/sample/expected-*.json`.
+
 ### CI/CD (M12)
 
 GitHub Actions: `build.yml` (sane baseline), `security-scan.yml` (no gate), `deploy.yml` (vuln-10). See `docs/ci-cd.md`.
@@ -99,16 +107,36 @@ make ci-verify-pipeline
 
 ## Cleanup
 
-<!-- TODO: make destroy, account teardown checklist. See docs/cleanup.md. -->
+Full teardown: `make destroy` (deletes `demo-prod` namespace + `cdk destroy --all`). Manual steps and account hygiene checklist: [docs/cleanup.md](docs/cleanup.md).
 
 ## Intentional risks
 
-Ten deliberate vulnerabilities (VULN 1–10) — see [spec §7](#7-the-10-intentional-vulnerabilities--integration-matrix) and `docs/intentional-risks.md` (filled M14).
+Ten deliberate vulnerabilities (vuln-1 … vuln-10) for CNAPP evaluation — internet exposure, broad IAM, weak RBAC, fake secrets, privileged worker, IRSA pivot, missing network segmentation, vulnerable image, unversioned sensitive S3, and weak CI/CD.
+
+| Priority chain | Vulns involved |
+|---|---|
+| **Critical toxic combo** | 1 + 8 + 3 + 6 + 2 + 9 + 7 |
+| Secondary | 4 (secret scanning), 10 (supply chain), 5 (privileged worker) |
+
+Full register with remediation: [docs/intentional-risks.md](docs/intentional-risks.md). ATT&CK mapping: [docs/threat-model.md](docs/threat-model.md). Graph oracle: [docs/graph-contract.md](docs/graph-contract.md).
+
+Regenerate live evidence: `make verify-vuln-matrix` · `make export-evidence`
 
 ## Links
 
-- [Architecture & build specification](#architecture--build-specification) (below)
-- `docs/architecture.md`, `docs/graph-contract.md`, `docs/runbook.md` (stubs until M14)
+| Doc | Description |
+|---|---|
+| [docs/architecture.md](docs/architecture.md) | Topology, naming table, master attack path |
+| [docs/taskvault-architecture.md](docs/taskvault-architecture.md) | Full build spec (README §1–11) |
+| [docs/threat-model.md](docs/threat-model.md) | ATT&CK + trust boundaries |
+| [docs/graph-contract.md](docs/graph-contract.md) | CNAPP node/edge/findings schema |
+| [docs/intentional-risks.md](docs/intentional-risks.md) | Auditor-facing risk register |
+| [docs/runbook.md](docs/runbook.md) | Deploy / seed / validate |
+| [docs/test-plan.md](docs/test-plan.md) | Acceptance tests |
+| [docs/cleanup.md](docs/cleanup.md) | Teardown procedures |
+| [docs/eks-deploy.md](docs/eks-deploy.md) | EKS bootstrap |
+| [docs/ci-cd.md](docs/ci-cd.md) | GitHub Actions |
+| [docs/kind-local.md](docs/kind-local.md) | Local kind cluster |
 
 ---
 

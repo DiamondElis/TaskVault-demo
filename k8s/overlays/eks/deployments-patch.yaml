@@ -39,3 +39,5 @@ spec:
       containers:
         - name: frontend
           imagePullPolicy: Always
+          securityContext:
+            readOnlyRootFilesystem: false

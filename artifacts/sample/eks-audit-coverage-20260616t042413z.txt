@@ -1,0 +1,16 @@
+=== T163 — audit log coverage ===
+✓ login_success
+✓ login_failure
+✓ task_created
+✓ file_uploaded
+✓ s3_object_written
+✓ worker_job_created
+✓ worker_job_started
+✓ worker_job_completed
+✓ admin_report_requested
+✓ admin_report_written
+
+--- CloudWatch sample (/taskvault/backend) ---
+WARN: no matching CloudWatch events yet (Fluent Bit may need more time)
+
+✓ T163 audit coverage passed. Evidence: /Users/elhanelias/Desktop/TaskVault-Demo/artifacts/sample/eks-audit-coverage-20260616t042413z.txt

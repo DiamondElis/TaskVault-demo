@@ -1,0 +1,77 @@
+AWS profile: taskvault-deploy  region: us-east-1  cluster: taskvault-eks
+
+=== T148 — Nodes ===
+NAME                          STATUS   ROLES    AGE   VERSION                INTERNAL-IP   EXTERNAL-IP   OS-IMAGE                        KERNEL-VERSION                    CONTAINER-RUNTIME
+ip-10-0-44-64.ec2.internal    Ready    <none>   20h   v1.31.14-eks-3385e9b   10.0.44.64    <none>        Amazon Linux 2023.11.20260526   6.1.172-216.329.amzn2023.x86_64   containerd://2.2.3+unknown
+ip-10-0-46-54.ec2.internal    Ready    <none>   21h   v1.31.14-eks-3385e9b   10.0.46.54    <none>        Amazon Linux 2023.11.20260526   6.1.172-216.329.amzn2023.x86_64   containerd://2.2.3+unknown
+ip-10-0-48-243.ec2.internal   Ready    <none>   21h   v1.31.14-eks-3385e9b   10.0.48.243   <none>        Amazon Linux 2023.11.20260526   6.1.172-216.329.amzn2023.x86_64   containerd://2.2.3+unknown
+Node group taskvault-ng: 3/3 Ready, 3 total, 0 NotReady
+✓ all 3 node(s) Ready
+
+=== T148 — EBS CSI add-on ===
+ACTIVE
+
+=== T148 — Node group ===
+-----------------------
+|  DescribeNodegroup  |
++----------+----------+
+|  desired | status   |
++----------+----------+
+|  3       |  ACTIVE  |
++----------+----------+
+
+=== T148 — OIDC provider ===
+Cluster issuer: oidc.eks.us-east-1.amazonaws.com/id/3508A8E3750BD8173E8A110D4D084DEC
+IAM OIDC providers: arn:aws:iam::840315891380:oidc-provider/oidc.eks.us-east-1.amazonaws.com/id/3508A8E3750BD8173E8A110D4D084DEC	arn:aws:iam::840315891380:oidc-provider/token.actions.githubusercontent.com
+✓ OIDC provider present
+
+=== T150 — ALB controller ===
+NAME                                            READY   STATUS    RESTARTS   AGE   IP           NODE                         NOMINATED NODE   READINESS GATES
+aws-load-balancer-controller-58785796b8-k2dqg   1/1     Running   0          18h   10.0.38.17   ip-10-0-46-54.ec2.internal   <none>           <none>
+pod/aws-load-balancer-controller-58785796b8-k2dqg condition met
+--- recent controller logs ---
+{"level":"error","ts":"2026-06-15T09:38:52Z","logger":"controllers.ingress","msg":"unable to determine AWS Shield subscription state, skipping AWS shield reconciliation","error":"SubscriptionRequiredException: The AWS Access Key Id needs a subscription for the service\n\tstatus code: 400, request id: 4591a107-3275-4e31-bbb8-b3ab31d6676f"}
+{"level":"info","ts":"2026-06-15T09:38:52Z","logger":"controllers.ingress","msg":"creating securityGroup","resourceID":"ManagedLBSecurityGroup"}
+{"level":"info","ts":"2026-06-15T09:38:52Z","logger":"controllers.ingress","msg":"created securityGroup","resourceID":"ManagedLBSecurityGroup","securityGroupID":"sg-0b5e83f0de1e09246"}
+{"level":"info","ts":"2026-06-15T09:38:53Z","msg":"authorizing securityGroup ingress","securityGroupID":"sg-0b5e83f0de1e09246","permission":[{"FromPort":80,"IpProtocol":"tcp","IpRanges":[{"CidrIp":"0.0.0.0/0","Description":""}],"Ipv6Ranges":null,"PrefixListIds":null,"ToPort":80,"UserIdGroupPairs":null}]}
+{"level":"info","ts":"2026-06-15T09:38:53Z","msg":"authorized securityGroup ingress","securityGroupID":"sg-0b5e83f0de1e09246"}
+{"level":"info","ts":"2026-06-15T09:38:53Z","logger":"controllers.ingress","msg":"creating targetGroup","stackID":"demo-prod/taskvault-public-ingress","resourceID":"demo-prod/taskvault-public-ingress-backend-service:8080"}
+{"level":"info","ts":"2026-06-15T09:38:53Z","logger":"controllers.ingress","msg":"created targetGroup","stackID":"demo-prod/taskvault-public-ingress","resourceID":"demo-prod/taskvault-public-ingress-backend-service:8080","arn":"arn:aws:elasticloadbalancing:us-east-1:840315891380:targetgroup/k8s-demoprod-backends-77187f5404/7095493470cf5e1a"}
+{"level":"info","ts":"2026-06-15T09:38:53Z","logger":"controllers.ingress","msg":"creating targetGroup","stackID":"demo-prod/taskvault-public-ingress","resourceID":"demo-prod/taskvault-public-ingress-frontend-service:80"}
+{"level":"info","ts":"2026-06-15T09:38:53Z","logger":"controllers.ingress","msg":"created targetGroup","stackID":"demo-prod/taskvault-public-ingress","resourceID":"demo-prod/taskvault-public-ingress-frontend-service:80","arn":"arn:aws:elasticloadbalancing:us-east-1:840315891380:targetgroup/k8s-demoprod-frontend-ec12755086/c58aa61bf483203b"}
+{"level":"info","ts":"2026-06-15T09:38:54Z","logger":"controllers.ingress","msg":"creating loadBalancer","stackID":"demo-prod/taskvault-public-ingress","resourceID":"LoadBalancer"}
+{"level":"info","ts":"2026-06-15T09:38:54Z","logger":"controllers.ingress","msg":"created loadBalancer","stackID":"demo-prod/taskvault-public-ingress","resourceID":"LoadBalancer","arn":"arn:aws:elasticloadbalancing:us-east-1:840315891380:loadbalancer/app/k8s-demoprod-taskvaul-6f35f9480b/d2fc703218f3a262"}
+{"level":"info","ts":"2026-06-15T09:38:54Z","logger":"controllers.ingress","msg":"creating listener","stackID":"demo-prod/taskvault-public-ingress","resourceID":"80"}
+{"level":"info","ts":"2026-06-15T09:38:54Z","logger":"controllers.ingress","msg":"created listener","stackID":"demo-prod/taskvault-public-ingress","resourceID":"80","arn":"arn:aws:elasticloadbalancing:us-east-1:840315891380:listener/app/k8s-demoprod-taskvaul-6f35f9480b/d2fc703218f3a262/356609b38f47acad"}
+{"level":"info","ts":"2026-06-15T09:38:54Z","logger":"controllers.ingress","msg":"creating listener rule","stackID":"demo-prod/taskvault-public-ingress","resourceID":"80:1"}
+{"level":"info","ts":"2026-06-15T09:38:54Z","logger":"controllers.ingress","msg":"created listener rule","stackID":"demo-prod/taskvault-public-ingress","resourceID":"80:1","arn":"arn:aws:elasticloadbalancing:us-east-1:840315891380:listener-rule/app/k8s-demoprod-taskvaul-6f35f9480b/d2fc703218f3a262/356609b38f47acad/1b37429135dbfe24"}
+{"level":"info","ts":"2026-06-15T09:38:54Z","logger":"controllers.ingress","msg":"creating listener rule","stackID":"demo-prod/taskvault-public-ingress","resourceID":"80:2"}
+{"level":"info","ts":"2026-06-15T09:38:55Z","logger":"controllers.ingress","msg":"created listener rule","stackID":"demo-prod/taskvault-public-ingress","resourceID":"80:2","arn":"arn:aws:elasticloadbalancing:us-east-1:840315891380:listener-rule/app/k8s-demoprod-taskvaul-6f35f9480b/d2fc703218f3a262/356609b38f47acad/d8f5da79366ae0ae"}
+{"level":"info","ts":"2026-06-15T09:38:55Z","logger":"controllers.ingress","msg":"creating listener rule","stackID":"demo-prod/taskvault-public-ingress","resourceID":"80:3"}
+{"level":"info","ts":"2026-06-15T09:38:55Z","logger":"controllers.ingress","msg":"created listener rule","stackID":"demo-prod/taskvault-public-ingress","resourceID":"80:3","arn":"arn:aws:elasticloadbalancing:us-east-1:840315891380:listener-rule/app/k8s-demoprod-taskvaul-6f35f9480b/d2fc703218f3a262/356609b38f47acad/0a30c94a954694a8"}
+{"level":"info","ts":"2026-06-15T09:38:55Z","logger":"controllers.ingress","msg":"creating targetGroupBinding","stackID":"demo-prod/taskvault-public-ingress","resourceID":"demo-prod/taskvault-public-ingress-backend-service:8080"}
+{"level":"info","ts":"2026-06-15T09:38:55Z","logger":"controllers.ingress","msg":"created targetGroupBinding","stackID":"demo-prod/taskvault-public-ingress","resourceID":"demo-prod/taskvault-public-ingress-backend-service:8080","targetGroupBinding":{"name":"k8s-demoprod-backends-77187f5404","namespace":"demo-prod"}}
+{"level":"info","ts":"2026-06-15T09:38:55Z","logger":"controllers.ingress","msg":"creating targetGroupBinding","stackID":"demo-prod/taskvault-public-ingress","resourceID":"demo-prod/taskvault-public-ingress-frontend-service:80"}
+{"level":"info","ts":"2026-06-15T09:38:55Z","logger":"controllers.ingress","msg":"created targetGroupBinding","stackID":"demo-prod/taskvault-public-ingress","resourceID":"demo-prod/taskvault-public-ingress-frontend-service:80","targetGroupBinding":{"name":"k8s-demoprod-frontend-ec12755086","namespace":"demo-prod"}}
+{"level":"info","ts":"2026-06-15T09:38:55Z","logger":"controllers.ingress","msg":"successfully deployed model","ingressGroup":"demo-prod/taskvault-public-ingress"}
+{"level":"info","ts":"2026-06-15T09:38:55Z","msg":"authorizing securityGroup ingress","securityGroupID":"sg-0131e2fde57b0c296","permission":[{"FromPort":8080,"IpProtocol":"tcp","IpRanges":null,"Ipv6Ranges":null,"PrefixListIds":null,"ToPort":8080,"UserIdGroupPairs":[{"Description":"elbv2.k8s.aws/targetGroupBinding=shared","GroupId":"sg-0c3552bb1397dd843","GroupName":null,"PeeringStatus":null,"UserId":null,"VpcId":null,"VpcPeeringConnectionId":null}]}]}
+{"level":"info","ts":"2026-06-15T09:38:55Z","msg":"authorized securityGroup ingress","securityGroupID":"sg-0131e2fde57b0c296"}
+{"level":"info","ts":"2026-06-15T09:38:56Z","msg":"registering targets","arn":"arn:aws:elasticloadbalancing:us-east-1:840315891380:targetgroup/k8s-demoprod-frontend-ec12755086/c58aa61bf483203b","targets":[{"AvailabilityZone":null,"Id":"10.0.47.176","Port":8080}]}
+{"level":"info","ts":"2026-06-15T09:38:56Z","msg":"registering targets","arn":"arn:aws:elasticloadbalancing:us-east-1:840315891380:targetgroup/k8s-demoprod-backends-77187f5404/7095493470cf5e1a","targets":[{"AvailabilityZone":null,"Id":"10.0.36.13","Port":8080}]}
+{"level":"info","ts":"2026-06-15T09:38:56Z","msg":"registered targets","arn":"arn:aws:elasticloadbalancing:us-east-1:840315891380:targetgroup/k8s-demoprod-frontend-ec12755086/c58aa61bf483203b"}
+{"level":"info","ts":"2026-06-15T09:38:56Z","msg":"registered targets","arn":"arn:aws:elasticloadbalancing:us-east-1:840315891380:targetgroup/k8s-demoprod-backends-77187f5404/7095493470cf5e1a"}
+✓ ALB controller pod ready
+
+=== T150 — Subnet discovery tags (T122) ===
+--------------------------------------------------------------------------------
+|                                DescribeSubnets                               |
++------------+----------+--------------+---------+-----------------------------+
+|     AZ     | ElbRole  | InternalElb  | Public  |          SubnetId           |
++------------+----------+--------------+---------+-----------------------------+
+|  us-east-1b|  None    |  1           |  False  |  subnet-09a67a10abb8d32ad   |
+|  us-east-1a|  1       |  None        |  True   |  subnet-0a68c941ae4951c13   |
+|  us-east-1a|  None    |  1           |  False  |  subnet-0e7e0ff3f3ce6d7f4   |
+|  us-east-1b|  1       |  None        |  True   |  subnet-08a701337ed3aa7a9   |
++------------+----------+--------------+---------+-----------------------------+
+
+Cluster verification passed. Evidence: /Users/elhanelias/Desktop/TaskVault-Demo/artifacts/sample/eks-cluster-verify-20260616t035128z.txt

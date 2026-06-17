@@ -11,7 +11,8 @@ CLUSTER_NAME="${EKS_CLUSTER_NAME:-taskvault-eks}"
 
 chmod +x "$REPO_ROOT/scripts/cdk-eks-preflight.sh" \
   "$REPO_ROOT/scripts/eks-wait-nodes.sh" \
-  "$REPO_ROOT/scripts/eks-install-alb-controller.sh"
+  "$REPO_ROOT/scripts/eks-install-alb-controller.sh" \
+  "$REPO_ROOT/scripts/eks-install-cloudwatch-observability.sh"
 
 "$REPO_ROOT/scripts/cdk-eks-preflight.sh"
 
@@ -27,6 +28,7 @@ taskvault_eks_update_kubeconfig "$CLUSTER_NAME"
 
 "$REPO_ROOT/scripts/eks-wait-nodes.sh"
 "$REPO_ROOT/scripts/eks-install-alb-controller.sh"
+"$REPO_ROOT/scripts/eks-install-cloudwatch-observability.sh"
 
 echo ""
 kubectl get nodes -o wide

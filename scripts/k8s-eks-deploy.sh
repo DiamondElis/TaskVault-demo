@@ -5,11 +5,12 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$REPO_ROOT"
 
+# shellcheck source=scripts/lib/taskvault-aws.sh
+source "$REPO_ROOT/scripts/lib/taskvault-aws.sh"
 # shellcheck source=scripts/cdk-outputs.sh
 source "$REPO_ROOT/scripts/cdk-outputs.sh"
 
 CLUSTER_NAME="${EKS_CLUSTER_NAME:-taskvault-eks}"
-REGION="${AWS_REGION:-us-east-1}"
 NAMESPACE="${K8S_NAMESPACE:-demo-prod}"
 OVERLAY_SRC="k8s/overlays/eks"
 OVERLAY_BUILD=""
@@ -22,10 +23,10 @@ cleanup() {
 }
 trap cleanup EXIT
 
-aws eks update-kubeconfig --name "$CLUSTER_NAME" --region "$REGION" >/dev/null
+taskvault_eks_update_kubeconfig "$CLUSTER_NAME" >/dev/null
 
 ACCOUNT="$(account_id)"
-REGISTRY="${ACCOUNT}.dkr.ecr.${REGION}.amazonaws.com"
+REGISTRY="${ACCOUNT}.dkr.ecr.${AWS_REGION}.amazonaws.com"
 
 export_value BACKEND_ROLE_ARN TaskvaultIam BackendRoleArn
 export_value WORKER_ROLE_ARN TaskvaultIam WorkerRoleArn
@@ -77,12 +78,17 @@ kubectl -n "$NAMESPACE" delete job db-migrator report-job --ignore-not-found
 kubectl apply -k "$OVERLAY_APPLY"
 
 echo "Running db-migrator job..."
-kubectl -n "$NAMESPACE" wait --for=condition=complete job/db-migrator --timeout=300s
+if ! kubectl -n "$NAMESPACE" wait --for=condition=complete job/db-migrator --timeout=300s; then
+  echo "ERROR: db-migrator did not complete"
+  kubectl -n "$NAMESPACE" logs job/db-migrator --tail=80 || true
+  kubectl -n "$NAMESPACE" describe job/db-migrator || true
+  exit 1
+fi
 
 echo "Waiting for deployments..."
-kubectl -n "$NAMESPACE" rollout status deployment/frontend --timeout=300s
 kubectl -n "$NAMESPACE" rollout status deployment/backend-api --timeout=300s
 kubectl -n "$NAMESPACE" rollout status deployment/worker --timeout=300s
+kubectl -n "$NAMESPACE" rollout status deployment/frontend --timeout=300s
 
 echo ""
 echo "ServiceAccount IRSA annotations:"

@@ -40,7 +40,7 @@ spec:
         app.kubernetes.io/name: taskvault
         app.kubernetes.io/component: seed-demo
     spec:
-      serviceAccountName: backend-sa
+      serviceAccountName: db-migrator-sa
       restartPolicy: Never
       containers:
         - name: seed-demo
@@ -55,6 +55,11 @@ spec:
           env:
             - name: USE_SECRETS_MANAGER
               value: "true"
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: db-credentials
+                  key: DATABASE_URL
           resources:
             requests:
               cpu: 100m

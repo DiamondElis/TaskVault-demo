@@ -14,7 +14,7 @@ AWS CDK (TypeScript) stacks for the `taskvault-demo-prod` account in `us-east-1`
 | TaskvaultEks | `lib/eks-stack.ts` | EKS, node group, IRSA for ALB, EBS CSI (ALB Helm: `scripts/eks-install-alb-controller.sh`) |
 | TaskvaultIam | `lib/iam-stack.ts` | IRSA roles (vuln-2, vuln-6) |
 | TaskvaultGithubOidc | `lib/github-oidc-role-stack.ts` | GitHub deploy role (vuln-10) |
-| TaskvaultObservability | `lib/observability-stack.ts` | Logs, CloudTrail, Inspector v2, GuardDuty (EKS+S3), Security Hub |
+| TaskvaultObservability | `lib/observability-stack.ts` | CloudWatch logs + CloudTrail; Inspector/GuardDuty/Security Hub opt-in (`cdk.json`) |
 
 ## Commands
 
@@ -33,5 +33,6 @@ From repo root: `make cdk-synth` (synth + Checkov), `make cdk-deploy`.
 - `githubOrg` / `githubRepo` — GitHub OIDC trust (`repo:<org>/<repo>:*`; repo name is case-sensitive)
 - `account` — AWS account ID (also set `CDK_DEFAULT_ACCOUNT` in the shell before deploy)
 - `enableBroadNodeEgress` — tag node SG with vuln-7 (default `true`)
-- `enableGuardDuty` — EKS audit-log + S3 protection detector (default `true`)
-- `enableSecurityHub` — Security Hub + AWS Foundational standard (default `true`)
+- `enableInspector` — Inspector v2 ECR scanning (default `false`; set `true` after enabling Inspector in the account)
+- `enableGuardDuty` — EKS audit-log + S3 protection detector (default `false`; set `true` after enabling GuardDuty in the account)
+- `enableSecurityHub` — Security Hub + AWS Foundational standard (default `false`; set `true` after enabling Security Hub in the account)

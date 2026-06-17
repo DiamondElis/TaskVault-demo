@@ -1,0 +1,3 @@
+taskvault-backend-role=arn:aws:iam::840315891380:role/taskvault-backend-role
+taskvault-worker-role=arn:aws:iam::840315891380:role/taskvault-worker-role
+taskvault-github-deploy-role=arn:aws:iam::840315891380:role/taskvault-github-deploy-role

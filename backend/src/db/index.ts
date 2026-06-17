@@ -1,4 +1,5 @@
 import pg from 'pg';
+import { getConfig } from '../config.js';
 
 /**
  * Migration tooling: node-pg-migrate (not Knex).
@@ -9,7 +10,7 @@ import pg from 'pg';
  * schema changes visible as plain migration files under backend/migrations/.
  */
 export function getDatabaseUrl(): string {
-  const url = process.env.DATABASE_URL;
+  const url = getConfig().databaseUrl;
   if (!url) {
     throw new Error('DATABASE_URL is required');
   }

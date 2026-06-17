@@ -1,0 +1,76 @@
+AWS profile: taskvault-deploy  region: us-east-1  cluster: taskvault-eks
+
+=== T148 — Nodes ===
+NAME                          STATUS   ROLES    AGE   VERSION                INTERNAL-IP   EXTERNAL-IP   OS-IMAGE                        KERNEL-VERSION                    CONTAINER-RUNTIME
+ip-10-0-46-54.ec2.internal    Ready    <none>   49m   v1.31.14-eks-3385e9b   10.0.46.54    <none>        Amazon Linux 2023.11.20260526   6.1.172-216.329.amzn2023.x86_64   containerd://2.2.3+unknown
+ip-10-0-48-243.ec2.internal   Ready    <none>   48m   v1.31.14-eks-3385e9b   10.0.48.243   <none>        Amazon Linux 2023.11.20260526   6.1.172-216.329.amzn2023.x86_64   containerd://2.2.3+unknown
+Node group taskvault-ng: 2/2 Ready, 2 total, 0 NotReady
+✓ all 2 node(s) Ready
+
+=== T148 — EBS CSI add-on ===
+ACTIVE
+
+=== T148 — Node group ===
+-----------------------
+|  DescribeNodegroup  |
++----------+----------+
+|  desired | status   |
++----------+----------+
+|  2       |  ACTIVE  |
++----------+----------+
+
+=== T148 — OIDC provider ===
+Cluster issuer: oidc.eks.us-east-1.amazonaws.com/id/3508A8E3750BD8173E8A110D4D084DEC
+IAM OIDC providers: arn:aws:iam::840315891380:oidc-provider/oidc.eks.us-east-1.amazonaws.com/id/3508A8E3750BD8173E8A110D4D084DEC
+✓ OIDC provider present
+
+=== T150 — ALB controller ===
+NAME                                            READY   STATUS    RESTARTS   AGE   IP            NODE                          NOMINATED NODE   READINESS GATES
+aws-load-balancer-controller-54d5449f49-b48rc   1/1     Running   0          14m   10.0.54.227   ip-10-0-48-243.ec2.internal   <none>           <none>
+pod/aws-load-balancer-controller-54d5449f49-b48rc condition met
+--- recent controller logs ---
+{"level":"info","ts":"2026-06-15T06:46:10Z","logger":"controller-runtime.webhook","msg":"Registering webhook","path":"/validate-networking-v1-ingress"}
+{"level":"info","ts":"2026-06-15T06:46:10Z","logger":"setup","msg":"starting podInfo repo"}
+{"level":"info","ts":"2026-06-15T06:46:12Z","logger":"controller-runtime.metrics","msg":"Starting metrics server"}
+{"level":"info","ts":"2026-06-15T06:46:12Z","logger":"controller-runtime.webhook","msg":"Starting webhook server"}
+{"level":"info","ts":"2026-06-15T06:46:12Z","logger":"controller-runtime.metrics","msg":"Serving metrics server","bindAddress":":8080","secure":false}
+{"level":"info","ts":"2026-06-15T06:46:12Z","msg":"starting server","name":"health probe","addr":"[::]:61779"}
+{"level":"info","ts":"2026-06-15T06:46:12Z","logger":"controller-runtime.certwatcher","msg":"Updated current TLS certificate"}
+{"level":"info","ts":"2026-06-15T06:46:12Z","logger":"controller-runtime.webhook","msg":"Serving webhook server","host":"","port":9443}
+{"level":"info","ts":"2026-06-15T06:46:12Z","logger":"controller-runtime.certwatcher","msg":"Starting certificate watcher"}
+I0615 06:46:12.550585       1 leaderelection.go:250] attempting to acquire leader lease kube-system/aws-load-balancer-controller-leader...
+I0615 06:46:29.045772       1 leaderelection.go:260] successfully acquired lease kube-system/aws-load-balancer-controller-leader
+{"level":"info","ts":"2026-06-15T06:46:29Z","msg":"Starting EventSource","controller":"ingress","source":"channel source: 0xc0004c9030"}
+{"level":"info","ts":"2026-06-15T06:46:29Z","msg":"Starting EventSource","controller":"ingress","source":"channel source: 0xc0004c90a0"}
+{"level":"info","ts":"2026-06-15T06:46:29Z","msg":"Starting EventSource","controller":"ingress","source":"kind source: *v1.Ingress"}
+{"level":"info","ts":"2026-06-15T06:46:29Z","msg":"Starting EventSource","controller":"ingress","source":"kind source: *v1.Service"}
+{"level":"info","ts":"2026-06-15T06:46:29Z","msg":"Starting EventSource","controller":"ingress","source":"channel source: 0xc0004c9110"}
+{"level":"info","ts":"2026-06-15T06:46:29Z","msg":"Starting EventSource","controller":"ingress","source":"channel source: 0xc0004c93b0"}
+{"level":"info","ts":"2026-06-15T06:46:29Z","msg":"Starting EventSource","controller":"ingress","source":"kind source: *v1beta1.IngressClassParams"}
+{"level":"info","ts":"2026-06-15T06:46:29Z","msg":"Starting EventSource","controller":"ingress","source":"kind source: *v1.IngressClass"}
+{"level":"info","ts":"2026-06-15T06:46:29Z","msg":"Starting Controller","controller":"ingress"}
+{"level":"info","ts":"2026-06-15T06:46:29Z","msg":"Starting EventSource","controller":"targetGroupBinding","controllerGroup":"elbv2.k8s.aws","controllerKind":"TargetGroupBinding","source":"kind source: *v1beta1.TargetGroupBinding"}
+{"level":"info","ts":"2026-06-15T06:46:29Z","msg":"Starting EventSource","controller":"targetGroupBinding","controllerGroup":"elbv2.k8s.aws","controllerKind":"TargetGroupBinding","source":"kind source: *v1.Service"}
+{"level":"info","ts":"2026-06-15T06:46:29Z","msg":"Starting EventSource","controller":"targetGroupBinding","controllerGroup":"elbv2.k8s.aws","controllerKind":"TargetGroupBinding","source":"kind source: *v1.Endpoints"}
+{"level":"info","ts":"2026-06-15T06:46:29Z","msg":"Starting EventSource","controller":"targetGroupBinding","controllerGroup":"elbv2.k8s.aws","controllerKind":"TargetGroupBinding","source":"kind source: *v1.Node"}
+{"level":"info","ts":"2026-06-15T06:46:29Z","msg":"Starting Controller","controller":"targetGroupBinding","controllerGroup":"elbv2.k8s.aws","controllerKind":"TargetGroupBinding"}
+{"level":"info","ts":"2026-06-15T06:46:29Z","msg":"Starting EventSource","controller":"service","source":"kind source: *v1.Service"}
+{"level":"info","ts":"2026-06-15T06:46:29Z","msg":"Starting Controller","controller":"service"}
+{"level":"info","ts":"2026-06-15T06:46:29Z","msg":"Starting workers","controller":"ingress","worker count":3}
+{"level":"info","ts":"2026-06-15T06:46:29Z","msg":"Starting workers","controller":"service","worker count":3}
+{"level":"info","ts":"2026-06-15T06:46:29Z","msg":"Starting workers","controller":"targetGroupBinding","controllerGroup":"elbv2.k8s.aws","controllerKind":"TargetGroupBinding","worker count":3}
+✓ ALB controller pod ready
+
+=== T150 — Subnet discovery tags (T122) ===
+--------------------------------------------------------------------------------
+|                                DescribeSubnets                               |
++------------+----------+--------------+---------+-----------------------------+
+|     AZ     | ElbRole  | InternalElb  | Public  |          SubnetId           |
++------------+----------+--------------+---------+-----------------------------+
+|  us-east-1b|  None    |  1           |  False  |  subnet-09a67a10abb8d32ad   |
+|  us-east-1a|  1       |  None        |  True   |  subnet-0a68c941ae4951c13   |
+|  us-east-1a|  None    |  1           |  False  |  subnet-0e7e0ff3f3ce6d7f4   |
+|  us-east-1b|  1       |  None        |  True   |  subnet-08a701337ed3aa7a9   |
++------------+----------+--------------+---------+-----------------------------+
+
+Cluster verification passed. Evidence: /Users/elhanelias/Desktop/TaskVault-Demo/artifacts/sample/eks-cluster-verify-20260615t070032z.txt

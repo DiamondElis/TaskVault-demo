@@ -63,7 +63,7 @@ export class ObservabilityStack extends cdk.Stack {
       },
     );
 
-    if (props.enableInspector ?? true) {
+    if (props.enableInspector ?? false) {
       new cr.AwsCustomResource(this, 'EnableInspectorV2Ecr', {
         onCreate: {
           service: 'Inspector2',
@@ -84,7 +84,7 @@ export class ObservabilityStack extends cdk.Stack {
 
     const eksClusterName = props.eksClusterName ?? TASKVAULT_CLUSTER_NAME;
 
-    if (props.enableGuardDuty ?? true) {
+    if (props.enableGuardDuty ?? false) {
       const detector = new guardduty.CfnDetector(this, 'GuardDutyDetector', {
         enable: true,
         findingPublishingFrequency: 'FIFTEEN_MINUTES',
@@ -108,7 +108,7 @@ export class ObservabilityStack extends cdk.Stack {
       });
     }
 
-    if (props.enableSecurityHub ?? true) {
+    if (props.enableSecurityHub ?? false) {
       const hub = new securityhub.CfnHub(this, 'SecurityHub', {
         enableDefaultStandards: true,
         autoEnableControls: true,

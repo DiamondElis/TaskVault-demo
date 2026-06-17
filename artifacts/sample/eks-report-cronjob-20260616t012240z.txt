@@ -1,0 +1,7 @@
+=== T164 — report-cronjob ===
+NAME             SCHEDULE       TIMEZONE   SUSPEND   ACTIVE   LAST SCHEDULE   AGE   CONTAINERS       IMAGES                                                                    SELECTOR
+report-cronjob   */15 * * * *   <none>     False     0        7m40s           18h   report-cronjob   840315891380.dkr.ecr.us-east-1.amazonaws.com/taskvault-worker:bootstrap   <none>
+Creating manual Job from cronjob template: report-cronjob-manual-20260616t012240z
+job.batch/report-cronjob-manual-20260616t012240z created
+Waiting for Job completion (timeout 180s)...
+error: timed out waiting for the condition on jobs/report-cronjob-manual-20260616t012240z

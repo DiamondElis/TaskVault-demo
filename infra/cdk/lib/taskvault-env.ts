@@ -22,6 +22,15 @@ export function taskvaultEnvironment(app: cdk.App): cdk.Environment {
   };
 }
 
+/** Parse CDK context booleans (`-c key=false` arrives as the string `"false"`). */
+export function contextBool(app: cdk.App, key: string, defaultValue: boolean): boolean {
+  const value = app.node.tryGetContext(key);
+  if (value === undefined || value === null) return defaultValue;
+  if (typeof value === 'boolean') return value;
+  if (typeof value === 'string') return value.toLowerCase() === 'true';
+  return Boolean(value);
+}
+
 export function applyTaskvaultTags(scope: Construct): void {
   cdk.Tags.of(scope).add('project', 'taskvault-demo');
   cdk.Tags.of(scope).add('cnapp.demo/environment', 'demo-prod');

@@ -1,0 +1,18 @@
+=== T161 — IRSA S3 evidence (vuln-2 / vuln-6) ===
+AWS profile: taskvault-deploy  region: us-east-1
+Backend role: arn:aws:iam::840315891380:role/taskvault-backend-role
+CloudTrail lookback from: 2026-06-15T03:52:17Z (1440m)
+
+--- backend-sa IRSA annotation ---
+backend-sa role-arn: arn:aws:iam::840315891380:role/taskvault-backend-role
+
+Checking backend deployment for static AWS key env vars...
+✓ no static AWS_ACCESS_KEY_ID on backend deployment
+✓ no static AWS_SECRET_ACCESS_KEY on backend deployment
+
+--- CloudTrail: AssumeRoleWithWebIdentity for taskvault-backend-role ---
+Events in lookback window: 37
+✓ AssumeRoleWithWebIdentity events found for taskvault-backend-role
+WARN: no recent PutObject events for taskvault-user-files (run smoke-eks for S3 data-plane evidence)
+
+✓ T161 IRSA evidence captured. Artifact: /Users/elhanelias/Desktop/TaskVault-Demo/artifacts/sample/eks-irsa-s3-20260616t035216z.txt

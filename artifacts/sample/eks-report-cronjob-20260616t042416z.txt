@@ -1,0 +1,18 @@
+=== T164 — report-cronjob ===
+NAME             SCHEDULE       TIMEZONE   SUSPEND   ACTIVE   LAST SCHEDULE   AGE   CONTAINERS       IMAGES                                                                    SELECTOR
+report-cronjob   */15 * * * *   <none>     False     0        9m16s           21h   report-cronjob   840315891380.dkr.ecr.us-east-1.amazonaws.com/taskvault-worker:bootstrap   <none>
+Creating manual Job from cronjob template: report-cronjob-manual-20260616t042416z
+job.batch/report-cronjob-manual-20260616t042416z created
+Waiting for Job completion (timeout 180s)...
+job.batch/report-cronjob-manual-20260616t042416z condition met
+
+--- cronjob Job logs ---
+{"report":{"id":"e5a05789-13fd-44e5-aab9-83b316b7b487","requested_by":"988e3aa1-0411-41da-897c-d4729fa735e2","user_count":5,"file_count":4,"sensitive_file_count":4,"report_s3_key":"reports/admin/report-1781583859321.json","created_at":"2026-06-16T04:24:19.322Z"},"job":{"id":"fb6b2839-9203-4fcb-a568-2f97800548eb","file_id":"b44b4ec6-64cd-49be-a6bc-aa4bd5420257","type":"admin_report","status":"queued","result_s3_key":null,"created_at":"2026-06-16T04:24:19.325Z","updated_at":"2026-06-16T04:24:19.325Z"}}
+
+Checking taskvault-reports for admin report objects...
+✓ report objects present:
+reports/admin/report-34aafe31-e1a0-412c-a7e8-ec23e91d4014.json
+reports/admin/report-39eb6faf-6e4d-4ddb-b67b-f19cbce320a0.json
+reports/admin/report-fb6b2839-9203-4fcb-a568-2f97800548eb.json
+
+✓ T164 report-cronjob verified. Evidence: /Users/elhanelias/Desktop/TaskVault-Demo/artifacts/sample/eks-report-cronjob-20260616t042416z.txt

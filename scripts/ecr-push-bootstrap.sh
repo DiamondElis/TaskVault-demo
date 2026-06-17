@@ -5,25 +5,30 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$REPO_ROOT"
 
+# shellcheck source=scripts/lib/taskvault-aws.sh
+source "$REPO_ROOT/scripts/lib/taskvault-aws.sh"
 # shellcheck source=scripts/cdk-outputs.sh
 source "$REPO_ROOT/scripts/cdk-outputs.sh"
 
-REGION="${AWS_REGION:-us-east-1}"
 TAG="${ECR_BOOTSTRAP_TAG:-bootstrap}"
 ACCOUNT="$(account_id)"
-REGISTRY="${ACCOUNT}.dkr.ecr.${REGION}.amazonaws.com"
+REGISTRY="${ACCOUNT}.dkr.ecr.${AWS_REGION}.amazonaws.com"
 
 export_value FRONTEND_REPO TaskvaultEcr FrontendRepoUri
 export_value BACKEND_REPO TaskvaultEcr BackendRepoUri
 export_value WORKER_REPO TaskvaultEcr WorkerRepoUri
 
 if ! docker image inspect taskvault-backend:local >/dev/null 2>&1; then
-  echo "Building local images..."
-  make docker-build
+  echo "Building local images for EKS (linux/amd64)..."
+  make docker-build DOCKER_PLATFORM=linux/amd64
+else
+  # EKS nodes are amd64 — rebuild if local images may be ARM (Docker Desktop on Apple Silicon).
+  echo "Rebuilding images for EKS (linux/amd64) before push..."
+  make docker-build DOCKER_PLATFORM=linux/amd64
 fi
 
-echo "Logging in to ECR ${REGISTRY}..."
-aws ecr get-login-password --region "$REGION" | docker login --username AWS --password-stdin "$REGISTRY"
+echo "Logging in to ECR ${REGISTRY} (profile ${AWS_PROFILE})..."
+taskvault_aws ecr get-login-password | docker login --username AWS --password-stdin "$REGISTRY"
 
 push_image() {
   local local_name="$1"

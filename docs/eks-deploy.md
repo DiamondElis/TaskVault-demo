@@ -11,7 +11,7 @@ Deploy TaskVault to `taskvault-eks` in `taskvault-demo-prod` (`us-east-1`).
 ## Phased deploy
 
 ```bash
-# T146 — VPC, KMS, ECR, S3, SQS, RDS, observability
+# T146 — VPC, KMS, ECR, S3, SQS, RDS, observability (CloudWatch + CloudTrail + Inspector; GuardDuty/Security Hub off by default)
 make cdk-deploy-foundation
 
 # T147 — EKS cluster + kubeconfig
@@ -50,6 +50,15 @@ Preflight (`scripts/cdk-eks-preflight.sh`) blocks concurrent deploys and failed 
 **Do not** run `make cdk-deploy` while `TaskvaultEks` is `CREATE_IN_PROGRESS`. Wait for `CREATE_COMPLETE` or use `make cdk-deploy-eks` alone after foundation is up.
 
 **Free-Tier-only accounts:** set `nodeInstanceType` in `infra/cdk/cdk.json` to `t3.micro` (default). `t3.medium` fails with `AsgInstanceLaunchFailures` / not Free Tier eligible.
+
+**Observability (`TaskvaultObservability`):** Inspector, GuardDuty, and Security Hub are **disabled by default** in `infra/cdk/cdk.json` so sandbox accounts without those services enabled still get CloudWatch log groups and CloudTrail. If a prior deploy left `TaskvaultObservability` in `ROLLBACK_COMPLETE`, delete it and redeploy foundation:
+
+```bash
+AWS_PROFILE=taskvault-deploy aws cloudformation delete-stack \
+  --stack-name TaskvaultObservability --region us-east-1
+# wait for DELETE_COMPLETE, then:
+make cdk-deploy-foundation
+```
 
 ### Recover from `ROLLBACK_COMPLETE`
 

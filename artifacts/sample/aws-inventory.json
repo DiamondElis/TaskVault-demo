@@ -1,0 +1,109 @@
+{
+  "schema_version": "1.0",
+  "collected_at": "2026-06-17T05:15:16.036860+00:00",
+  "region": "us-east-1",
+  "profile": "taskvault-deploy",
+  "account": "840315891380",
+  "vpc": {
+    "id": "vpc-01c5ecb713d43a69e",
+    "security_groups": {
+      "alb": "sg-02529b6f8df0cb1ff",
+      "rds": "sg-00dbab0faf750ab36",
+      "node": "sg-07e943b4a6a2c1878"
+    },
+    "subnets": [
+      {
+        "id": "subnet-09a67a10abb8d32ad",
+        "az": "us-east-1b",
+        "public": false
+      },
+      {
+        "id": "subnet-0a68c941ae4951c13",
+        "az": "us-east-1a",
+        "public": true
+      },
+      {
+        "id": "subnet-0e7e0ff3f3ce6d7f4",
+        "az": "us-east-1a",
+        "public": false
+      },
+      {
+        "id": "subnet-08a701337ed3aa7a9",
+        "az": "us-east-1b",
+        "public": true
+      }
+    ]
+  },
+  "eks": {
+    "name": "taskvault-eks",
+    "arn": "arn:aws:eks:us-east-1:840315891380:cluster/taskvault-eks",
+    "version": "1.31",
+    "status": "ACTIVE",
+    "oidc_issuer": "https://oidc.eks.us-east-1.amazonaws.com/id/3508A8E3750BD8173E8A110D4D084DEC",
+    "endpoint": "https://3508A8E3750BD8173E8A110D4D084DEC.gr7.us-east-1.eks.amazonaws.com"
+  },
+  "iam": {
+    "roles": [
+      {
+        "name": "taskvault-backend-role",
+        "arn": "arn:aws:iam::840315891380:role/taskvault-backend-role",
+        "stack": "TaskvaultIam"
+      },
+      {
+        "name": "taskvault-worker-role",
+        "arn": "arn:aws:iam::840315891380:role/taskvault-worker-role",
+        "stack": "TaskvaultIam"
+      },
+      {
+        "name": "taskvault-github-deploy-role",
+        "arn": "arn:aws:iam::840315891380:role/taskvault-github-deploy-role",
+        "stack": "TaskvaultGithubOidc"
+      }
+    ]
+  },
+  "s3": {
+    "buckets": [
+      {
+        "name": "taskvault-user-files",
+        "versioning": "Disabled"
+      },
+      {
+        "name": "taskvault-reports",
+        "versioning": "Enabled"
+      }
+    ]
+  },
+  "rds": {
+    "endpoint": "taskvault-db.cohik8s6opm8.us-east-1.rds.amazonaws.com",
+    "secret_arn": "arn:aws:secretsmanager:us-east-1:840315891380:secret:taskvault/demo/db-RatUvy"
+  },
+  "ecr": {
+    "repositories": [
+      {
+        "name": "taskvault-frontend",
+        "uri": "840315891380.dkr.ecr.us-east-1.amazonaws.com/taskvault-frontend"
+      },
+      {
+        "name": "taskvault-backend",
+        "uri": "840315891380.dkr.ecr.us-east-1.amazonaws.com/taskvault-backend"
+      },
+      {
+        "name": "taskvault-worker",
+        "uri": "840315891380.dkr.ecr.us-east-1.amazonaws.com/taskvault-worker"
+      }
+    ]
+  },
+  "alb": {
+    "hostname": "k8s-demoprod-taskvaul-6f35f9480b-1007434742.us-east-1.elb.amazonaws.com",
+    "internet_facing": true,
+    "arn": "arn:aws:elasticloadbalancing:us-east-1:840315891380:loadbalancer/app/k8s-demoprod-taskvaul-6f35f9480b/d2fc703218f3a262",
+    "scheme": "internet-facing"
+  },
+  "cloudtrail": {
+    "name": "taskvault-demo-trail",
+    "arn": "arn:aws:cloudtrail:us-east-1:840315891380:trail/taskvault-demo-trail",
+    "s3_bucket": "taskvaultobservability-taskvaulttrails30d475de9-kdonjv45cqnc",
+    "is_multi_region": false
+  },
+  "errors": []
+}

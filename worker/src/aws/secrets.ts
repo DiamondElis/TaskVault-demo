@@ -16,7 +16,11 @@ function buildDatabaseUrl(secret: DbSecretPayload): string {
   const host = secret.host ?? 'localhost';
   const port = secret.port ?? 5432;
   const dbname = secret.dbname ?? 'taskvault';
-  return `postgres://${encodeURIComponent(username)}:${encodeURIComponent(password)}@${host}:${port}/${dbname}`;
+  const base = `postgres://${encodeURIComponent(username)}:${encodeURIComponent(password)}@${host}:${port}/${dbname}`;
+  if (String(host).includes('.rds.') || String(host).includes('amazonaws.com')) {
+    return `${base}?sslmode=no-verify`;
+  }
+  return base;
 }
 
 export async function resolveDatabaseUrl(): Promise<string> {

@@ -1,0 +1,8 @@
+
+=== T148 — Nodes ===
+E0614 05:19:11.546217   33907 memcache.go:265] "Unhandled Error" err="couldn't get current server API group list: the server has asked for the client to provide credentials"
+E0614 05:19:12.170744   33907 memcache.go:265] "Unhandled Error" err="couldn't get current server API group list: the server has asked for the client to provide credentials"
+E0614 05:19:12.642686   33907 memcache.go:265] "Unhandled Error" err="couldn't get current server API group list: the server has asked for the client to provide credentials"
+E0614 05:19:13.084572   33907 memcache.go:265] "Unhandled Error" err="couldn't get current server API group list: the server has asked for the client to provide credentials"
+E0614 05:19:13.524869   33907 memcache.go:265] "Unhandled Error" err="couldn't get current server API group list: the server has asked for the client to provide credentials"
+error: You must be logged in to the server (the server has asked for the client to provide credentials)

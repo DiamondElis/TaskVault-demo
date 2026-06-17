@@ -1,0 +1,97 @@
+{
+  "schema_version": "1.0",
+  "description": "Acceptance oracle — graph edges for TaskVault master attack path (spec §8)",
+  "edges": [
+    {
+      "id": "internet-to-alb",
+      "from": "internet",
+      "to": "aws-alb-public",
+      "relationship": "exposes",
+      "vuln_ids": ["vuln-1"]
+    },
+    {
+      "id": "alb-to-ingress",
+      "from": "aws-alb-public",
+      "to": "k8s-ingress-taskvault-public",
+      "relationship": "routes_to",
+      "vuln_ids": ["vuln-1"]
+    },
+    {
+      "id": "ingress-to-service",
+      "from": "k8s-ingress-taskvault-public",
+      "to": "k8s-service-backend",
+      "relationship": "routes_to",
+      "vuln_ids": []
+    },
+    {
+      "id": "service-to-endpointslice",
+      "from": "k8s-service-backend",
+      "to": "k8s-endpointslice-backend",
+      "relationship": "selects",
+      "vuln_ids": []
+    },
+    {
+      "id": "endpointslice-to-pod",
+      "from": "k8s-endpointslice-backend",
+      "to": "k8s-pod-backend-api",
+      "relationship": "targets",
+      "vuln_ids": []
+    },
+    {
+      "id": "pod-runs-image",
+      "from": "k8s-pod-backend-api",
+      "to": "container-image-backend",
+      "relationship": "runs",
+      "vuln_ids": ["vuln-8"]
+    },
+    {
+      "id": "pod-uses-sa",
+      "from": "k8s-pod-backend-api",
+      "to": "k8s-sa-backend",
+      "relationship": "uses_serviceaccount",
+      "vuln_ids": ["vuln-3"]
+    },
+    {
+      "id": "sa-irsa-backend-role",
+      "from": "k8s-sa-backend",
+      "to": "aws-iam-backend-role",
+      "relationship": "assumes_via_irsa",
+      "vuln_ids": ["vuln-6"]
+    },
+    {
+      "id": "backend-role-s3-broad",
+      "from": "aws-iam-backend-role",
+      "to": "aws-s3-user-files",
+      "relationship": "s3_star_access",
+      "vuln_ids": ["vuln-2"]
+    },
+    {
+      "id": "bucket-to-sensitive-prefix",
+      "from": "aws-s3-user-files",
+      "to": "aws-s3-sensitive-prefix",
+      "relationship": "contains",
+      "vuln_ids": ["vuln-9"]
+    },
+    {
+      "id": "github-repo-builds-image",
+      "from": "github-repo-taskvault",
+      "to": "container-image-backend",
+      "relationship": "builds",
+      "vuln_ids": ["vuln-10"]
+    },
+    {
+      "id": "deploy-workflow-assumes-oidc",
+      "from": "github-workflow-deploy",
+      "to": "aws-iam-github-oidc-role",
+      "relationship": "assumes_via_oidc",
+      "vuln_ids": ["vuln-10"]
+    },
+    {
+      "id": "worker-privileged-pivot",
+      "from": "k8s-pod-worker",
+      "to": "aws-iam-backend-role",
+      "relationship": "lateral_pivot_potential",
+      "vuln_ids": ["vuln-5", "vuln-7"]
+    }
+  ]
+}

@@ -9,7 +9,7 @@ import { NetworkStack } from '../lib/network-stack';
 import { ObservabilityStack } from '../lib/observability-stack';
 import { RdsStack } from '../lib/rds-stack';
 import { StorageStack } from '../lib/storage-stack';
-import { applyTaskvaultTags, taskvaultEnvironment, TASKVAULT_CLUSTER_NAME } from '../lib/taskvault-env';
+import { applyTaskvaultTags, contextBool, taskvaultEnvironment, TASKVAULT_CLUSTER_NAME } from '../lib/taskvault-env';
 
 const app = new cdk.App();
 const env = taskvaultEnvironment(app);
@@ -84,11 +84,12 @@ githubOidc.addDependency(eks);
 
 const observability = new ObservabilityStack(app, 'TaskvaultObservability', {
   env,
-  description: 'TaskVault CloudWatch logs, CloudTrail, Inspector, GuardDuty, Security Hub',
+  description: 'TaskVault CloudWatch logs and CloudTrail (Inspector/GuardDuty/Security Hub opt-in)',
   userFilesBucket: storage.userFilesBucket,
   eksClusterName: TASKVAULT_CLUSTER_NAME,
-  enableGuardDuty: app.node.tryGetContext('enableGuardDuty') ?? true,
-  enableSecurityHub: app.node.tryGetContext('enableSecurityHub') ?? true,
+  enableInspector: contextBool(app, 'enableInspector', false),
+  enableGuardDuty: contextBool(app, 'enableGuardDuty', false),
+  enableSecurityHub: contextBool(app, 'enableSecurityHub', false),
 });
 observability.addDependency(storage);
 observability.addDependency(ecr);

@@ -12,6 +12,9 @@ export PATH := /Applications/Docker.app/Contents/Resources/bin:$(PATH)
 COMPOSE := docker compose -f docker-compose.local.yml
 DEFAULT_DATABASE_URL := postgres://demo:password@localhost:5432/taskvault
 IMAGE_TAG := local
+# EKS workers are x86_64 — override for local ARM kind: make docker-build DOCKER_PLATFORM=
+DOCKER_PLATFORM ?=
+DOCKER_PLATFORM_FLAG := $(if $(DOCKER_PLATFORM),--platform $(DOCKER_PLATFORM),)
 
 help:
 	@echo "TaskVault demo targets:"
@@ -73,10 +76,10 @@ local-down:
 	$(COMPOSE) down -v
 
 docker-build:
-	docker build -t taskvault-backend:$(IMAGE_TAG) -f backend/Dockerfile --target stage-1 .
-	docker build -t taskvault-backend-migrator:$(IMAGE_TAG) -f backend/Dockerfile --target migrator .
-	docker build -t taskvault-worker:$(IMAGE_TAG) -f worker/Dockerfile .
-	docker build -t taskvault-frontend:$(IMAGE_TAG) -f frontend/Dockerfile .
+	docker build $(DOCKER_PLATFORM_FLAG) -t taskvault-backend:$(IMAGE_TAG) -f backend/Dockerfile --target stage-1 .
+	docker build $(DOCKER_PLATFORM_FLAG) -t taskvault-backend-migrator:$(IMAGE_TAG) -f backend/Dockerfile --target migrator .
+	docker build $(DOCKER_PLATFORM_FLAG) -t taskvault-worker:$(IMAGE_TAG) -f worker/Dockerfile .
+	docker build $(DOCKER_PLATFORM_FLAG) -t taskvault-frontend:$(IMAGE_TAG) -f frontend/Dockerfile .
 
 scan-local:
 	chmod +x scripts/verify-vuln-matrix.sh scripts/verify-vuln-*.sh scripts/compile-vuln-matrix.sh
@@ -199,10 +202,13 @@ test-demo:
 	./scripts/smoke-local.sh
 
 export-evidence:
+	chmod +x scripts/export-evidence.sh scripts/lib/export-evidence-common.sh \
+		scripts/collect-aws-inventory.sh scripts/collect-k8s-inventory.sh scripts/collect-github-inventory.sh
 	./scripts/export-evidence.sh
 
 destroy:
-	@echo "TODO: destroy"
+	chmod +x scripts/destroy-demo.sh
+	./scripts/destroy-demo.sh
 
 verify-vuln-matrix:
 	chmod +x scripts/verify-vuln-matrix.sh scripts/verify-vuln-*.sh scripts/compile-vuln-matrix.sh scripts/vuln-evidence-common.sh scripts/cdk-outputs.sh

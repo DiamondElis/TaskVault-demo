@@ -1,0 +1,134 @@
+{
+  "schema_version": "1.0",
+  "description": "Acceptance oracle — graph nodes for TaskVault master attack path (spec §8)",
+  "nodes": [
+    {
+      "id": "internet",
+      "type": "exposure",
+      "provider": "external",
+      "label": "Internet",
+      "vuln_ids": [],
+      "connectors": ["aws"]
+    },
+    {
+      "id": "aws-alb-public",
+      "type": "load_balancer",
+      "provider": "aws",
+      "label": "Internet-facing ALB",
+      "canonical_names": ["taskvault-public-ingress"],
+      "vuln_ids": ["vuln-1"],
+      "connectors": ["aws", "k8s"]
+    },
+    {
+      "id": "k8s-ingress-taskvault-public",
+      "type": "ingress",
+      "provider": "kubernetes",
+      "label": "taskvault-public-ingress",
+      "namespace": "demo-prod",
+      "vuln_ids": ["vuln-1"],
+      "connectors": ["k8s"]
+    },
+    {
+      "id": "k8s-service-backend",
+      "type": "service",
+      "provider": "kubernetes",
+      "label": "backend-service",
+      "namespace": "demo-prod",
+      "vuln_ids": [],
+      "connectors": ["k8s"]
+    },
+    {
+      "id": "k8s-endpointslice-backend",
+      "type": "endpointslice",
+      "provider": "kubernetes",
+      "label": "backend-service endpoints",
+      "namespace": "demo-prod",
+      "vuln_ids": [],
+      "connectors": ["k8s"]
+    },
+    {
+      "id": "k8s-pod-backend-api",
+      "type": "pod",
+      "provider": "kubernetes",
+      "label": "backend-api",
+      "namespace": "demo-prod",
+      "vuln_ids": ["vuln-8"],
+      "connectors": ["k8s", "scanner"]
+    },
+    {
+      "id": "container-image-backend",
+      "type": "container_image",
+      "provider": "ecr",
+      "label": "taskvault-backend",
+      "vuln_ids": ["vuln-4", "vuln-8"],
+      "connectors": ["scanner", "github"]
+    },
+    {
+      "id": "k8s-sa-backend",
+      "type": "serviceaccount",
+      "provider": "kubernetes",
+      "label": "backend-sa",
+      "namespace": "demo-prod",
+      "vuln_ids": ["vuln-3", "vuln-6"],
+      "connectors": ["k8s"]
+    },
+    {
+      "id": "aws-iam-backend-role",
+      "type": "iam_role",
+      "provider": "aws",
+      "label": "taskvault-backend-role",
+      "vuln_ids": ["vuln-2", "vuln-6"],
+      "connectors": ["aws", "k8s"]
+    },
+    {
+      "id": "aws-s3-user-files",
+      "type": "s3_bucket",
+      "provider": "aws",
+      "label": "taskvault-user-files",
+      "vuln_ids": ["vuln-9"],
+      "connectors": ["aws"]
+    },
+    {
+      "id": "aws-s3-sensitive-prefix",
+      "type": "s3_object_prefix",
+      "provider": "aws",
+      "label": "uploads/sensitive/",
+      "bucket": "taskvault-user-files",
+      "vuln_ids": ["vuln-9"],
+      "connectors": ["aws"]
+    },
+    {
+      "id": "k8s-pod-worker",
+      "type": "pod",
+      "provider": "kubernetes",
+      "label": "worker",
+      "namespace": "demo-prod",
+      "vuln_ids": ["vuln-5", "vuln-7"],
+      "connectors": ["k8s", "scanner"]
+    },
+    {
+      "id": "github-repo-taskvault",
+      "type": "repository",
+      "provider": "github",
+      "label": "taskvault-demo",
+      "vuln_ids": ["vuln-4", "vuln-10"],
+      "connectors": ["github", "scanner"]
+    },
+    {
+      "id": "github-workflow-deploy",
+      "type": "workflow",
+      "provider": "github",
+      "label": "deploy.yml",
+      "vuln_ids": ["vuln-10"],
+      "connectors": ["github"]
+    },
+    {
+      "id": "aws-iam-github-oidc-role",
+      "type": "iam_role",
+      "provider": "aws",
+      "label": "taskvault-github-deploy-role",
+      "vuln_ids": ["vuln-10"],
+      "connectors": ["aws", "github"]
+    }
+  ]
+}

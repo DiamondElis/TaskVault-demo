@@ -1,0 +1,103 @@
+{
+  "schema_version": "1.0",
+  "description": "Acceptance oracle — prioritized attack paths and toxic combinations (spec §8)",
+  "attack_paths": [
+    {
+      "id": "master-code-to-cloud",
+      "priority": "critical",
+      "title": "Internet → ALB → vulnerable root backend → IRSA → broad S3 + sensitive data",
+      "toxic_combination": true,
+      "vuln_ids": ["vuln-1", "vuln-8", "vuln-3", "vuln-6", "vuln-2", "vuln-9", "vuln-7"],
+      "techniques": ["T1190", "T1078", "T1552", "T1530"],
+      "node_sequence": [
+        "internet",
+        "aws-alb-public",
+        "k8s-ingress-taskvault-public",
+        "k8s-service-backend",
+        "k8s-endpointslice-backend",
+        "k8s-pod-backend-api",
+        "container-image-backend",
+        "k8s-sa-backend",
+        "aws-iam-backend-role",
+        "aws-s3-user-files",
+        "aws-s3-sensitive-prefix"
+      ],
+      "edge_sequence": [
+        "internet-to-alb",
+        "alb-to-ingress",
+        "ingress-to-service",
+        "service-to-endpointslice",
+        "endpointslice-to-pod",
+        "pod-runs-image",
+        "pod-uses-sa",
+        "sa-irsa-backend-role",
+        "backend-role-s3-broad",
+        "bucket-to-sensitive-prefix"
+      ],
+      "finding_ids": [
+        "finding-vuln-1-alb-exposure",
+        "finding-vuln-8-vulnerable-root-image",
+        "finding-vuln-3-rbac-secrets",
+        "finding-vuln-6-irsa-secretsmanager",
+        "finding-vuln-2-s3-star",
+        "finding-vuln-9-s3-no-versioning",
+        "finding-vuln-7-no-default-deny"
+      ],
+      "narrative": "A lone CVE or lone s3:* is medium; together with internet exposure, weak K8s identity, IRSA bridge, and unversioned sensitive S3 data this becomes one Critical code-to-cloud path."
+    },
+    {
+      "id": "secondary-github-leak-to-iam",
+      "priority": "high",
+      "title": "Leaked fake repo secret → IAM-shaped credential abuse",
+      "toxic_combination": false,
+      "vuln_ids": ["vuln-4"],
+      "techniques": ["T1552.001"],
+      "node_sequence": [
+        "github-repo-taskvault",
+        "container-image-backend"
+      ],
+      "edge_sequence": [
+        "github-repo-builds-image"
+      ],
+      "finding_ids": ["finding-vuln-4-fake-secrets"],
+      "narrative": "Demonstrates secret scanning correlation across GitHub and container image layers."
+    },
+    {
+      "id": "secondary-cicd-oidc-takeover",
+      "priority": "high",
+      "title": "Over-privileged GitHub workflow → OIDC role → EKS/ECR takeover",
+      "toxic_combination": false,
+      "vuln_ids": ["vuln-10"],
+      "techniques": ["T1195", "T1078.004"],
+      "node_sequence": [
+        "github-workflow-deploy",
+        "aws-iam-github-oidc-role"
+      ],
+      "edge_sequence": [
+        "deploy-workflow-assumes-oidc"
+      ],
+      "finding_ids": ["finding-vuln-10-cicd-supply-chain"],
+      "narrative": "Supply-chain path: unpinned actions and write-all permissions can assume broad deploy role without scan gate."
+    },
+    {
+      "id": "secondary-worker-node-pivot",
+      "priority": "medium",
+      "title": "Privileged worker + weak netpol → pod→node→cloud pivot",
+      "toxic_combination": false,
+      "vuln_ids": ["vuln-5", "vuln-7"],
+      "techniques": ["T1611", "T1021"],
+      "node_sequence": [
+        "k8s-pod-worker",
+        "aws-iam-backend-role"
+      ],
+      "edge_sequence": [
+        "worker-privileged-pivot"
+      ],
+      "finding_ids": [
+        "finding-vuln-5-privileged-worker",
+        "finding-vuln-7-no-default-deny"
+      ],
+      "narrative": "Shows prioritization below the master path — lateral movement from privileged worker toward cloud credentials."
+    }
+  ]
+}

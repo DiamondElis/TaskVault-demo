@@ -1,4 +1,23 @@
-title = "TaskVault M11 verification — no allowlist (expect fake placeholders flagged)"
+title = "TaskVault M11/M13 verification — explicit fake fixture rules (vuln-4)"
 
 [extend]
 useDefault = true
+
+[[rules]]
+id = "taskvault-fake-aws-key"
+description = "Demo fake AWS access key fixture (vuln-4)"
+regex = '''AKIAFAKEDEMO\d+'''
+keywords = ["AKIAFAKEDEMO"]
+
+[[rules]]
+id = "taskvault-fake-stripe-key"
+description = "Demo fake Stripe test key fixture (vuln-4)"
+regex = '''sk_test_fake_demo_value'''
+keywords = ["sk_test_fake"]
+
+[allowlist]
+description = "Skip generated evidence and CDK synth output during export-evidence scans"
+paths = [
+  '''(^|/)artifacts/sample/''',
+  '''(^|/)infra/cdk/cdk\.out/''',
+]

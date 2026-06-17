@@ -1,0 +1,6 @@
+=== T155 — ALB + vuln-1 public reachability ===
+NAME                       CLASS    HOSTS   ADDRESS   PORTS   AGE
+taskvault-public-ingress   <none>   *                 80      133m
+ALB hostname: <pending>
+ALB scheme: None
+FAIL: ingress has no load balancer hostname yet — wait for ALB controller
