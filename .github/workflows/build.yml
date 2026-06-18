@@ -79,21 +79,21 @@ jobs:
           REGISTRY: ${{ steps.registry.outputs.registry }}
         run: |
           set -euo pipefail
+          # Migrator ships as a -migrator tag inside the taskvault-backend repo
+          # (matches scripts/k8s-eks-deploy.sh and the 3-repo ECR design — there
+          # is no separate taskvault-backend-migrator repository).
           docker build -t "${REGISTRY}/taskvault-backend:${IMAGE_TAG}" \
             -f backend/Dockerfile --target stage-1 .
-          docker build -t "${REGISTRY}/taskvault-backend-migrator:${IMAGE_TAG}-migrator" \
+          docker build -t "${REGISTRY}/taskvault-backend:${IMAGE_TAG}-migrator" \
             -f backend/Dockerfile --target migrator .
           docker build -t "${REGISTRY}/taskvault-worker:${IMAGE_TAG}" \
             -f worker/Dockerfile .
           docker build -t "${REGISTRY}/taskvault-frontend:${IMAGE_TAG}" \
             -f frontend/Dockerfile .
-          for img in taskvault-backend taskvault-backend-migrator taskvault-worker taskvault-frontend; do
-            if [[ "$img" == "taskvault-backend-migrator" ]]; then
-              docker push "${REGISTRY}/${img}:${IMAGE_TAG}-migrator"
-            else
-              docker push "${REGISTRY}/${img}:${IMAGE_TAG}"
-            fi
-          done
+          docker push "${REGISTRY}/taskvault-backend:${IMAGE_TAG}"
+          docker push "${REGISTRY}/taskvault-backend:${IMAGE_TAG}-migrator"
+          docker push "${REGISTRY}/taskvault-worker:${IMAGE_TAG}"
+          docker push "${REGISTRY}/taskvault-frontend:${IMAGE_TAG}"
           echo "Pushed images tagged ${IMAGE_TAG} to ${REGISTRY}"
 
       - name: Docker build only (PR — no ECR push)
