@@ -1,6 +1,6 @@
 # vuln-10: intentionally weak deploy workflow (spec §5.4).
 # - permissions: write-all (over-broad GitHub token scope)
-# - third-party action pinned to @main (supply-chain risk)
+# - unpinned third-party action on a mutable branch ref @master (supply-chain risk)
 # - assumes taskvault-github-deploy-role with broad OIDC trust (any branch/ref)
 #
 # T183 — INTENTIONALLY ABSENT (demo supply-chain story):
@@ -30,9 +30,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # vuln-10: unpinned third-party action on @main (not pinned to commit SHA).
+      # vuln-10: unpinned third-party action on a mutable branch ref (not pinned to commit SHA).
       - name: Third-party deploy shim (vuln-10)
-        uses: nick-fields/retry@main
+        uses: nick-fields/retry@master
         with:
           max_attempts: 1
           timeout_seconds: 30
